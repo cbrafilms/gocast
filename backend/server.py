@@ -38,6 +38,24 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+# User Models para Registro
+class UserRegister(BaseModel):
+    nombre: str
+    email: EmailStr
+    password: str
+    tipo_usuario: str  # 'talento' o 'productora'
+    acepta_terminos: bool
+
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nombre: str
+    email: str
+    tipo_usuario: str
+    fecha_registro: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    activo: bool = True
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
