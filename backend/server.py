@@ -85,6 +85,58 @@ async def get_status_checks():
     
     return status_checks
 
+# Endpoint de Registro
+@api_router.post("/register", response_model=User)
+async def register_user(user_data: UserRegister):
+    # Validar que acepta términos
+    if not user_data.acepta_terminos:
+        raise HTTPException(
+            status_code=400, 
+            detail="Debes aceptar los términos y condiciones para registrarte"
+        )
+    
+    # Validar tipo de usuario
+    if user_data.tipo_usuario not in ['talento', 'productora']:
+        raise HTTPException(
+            status_code=400,
+            detail="Tipo de usuario inválido. Debe ser 'talento' o 'productora'"
+        )
+    
+    # Verificar si el email ya existe
+    existing_user = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Este email ya está registrado"
+        )
+    
+    # Hash de la contraseña (simple hash para el ejemplo)
+    password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+    
+    # Crear objeto User
+    user = User(
+        nombre=user_data.nombre,
+        email=user_data.email,
+        tipo_usuario=user_data.tipo_usuario
+    )
+    
+    # Preparar documento para MongoDB
+    doc = user.model_dump()
+    doc['password_hash'] = password_hash
+    doc['fecha_registro'] = doc['fecha_registro'].isoformat()
+    
+    # Insertar en la base de datos
+    try:
+        await db.users.insert_one(doc)
+        logger.info(f"Usuario registrado: {user.email} ({user.tipo_usuario})")
+        return user
+    except Exception as e:
+        logger.error(f"Error al registrar usuario: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error al crear el usuario"
+        )
+
 # Include the router in the main app
 app.include_router(api_router)
 
