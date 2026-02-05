@@ -216,6 +216,122 @@ async def register_user(user_data: UserRegister):
             detail="Error al crear el usuario"
         )
 
+# Endpoint de Login
+@api_router.post("/login", response_model=LoginResponse)
+async def login(user_data: UserLogin):
+    # Buscar usuario por email
+    user_doc = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+    
+    if not user_doc:
+        raise HTTPException(
+            status_code=401,
+            detail="Email o contraseña incorrectos"
+        )
+    
+    # Verificar contraseña
+    password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+    
+    if user_doc.get('password_hash') != password_hash:
+        raise HTTPException(
+            status_code=401,
+            detail="Email o contraseña incorrectos"
+        )
+    
+    # Convertir fecha_registro si es string
+    if isinstance(user_doc['fecha_registro'], str):
+        user_doc['fecha_registro'] = datetime.fromisoformat(user_doc['fecha_registro'])
+    
+    # Crear usuario sin password_hash
+    user_doc_clean = {k: v for k, v in user_doc.items() if k != 'password_hash'}
+    user = User(**user_doc_clean)
+    
+    # Crear token JWT
+    access_token = create_access_token(data={"sub": user.id})
+    
+    logger.info(f"Usuario logueado: {user.email}")
+    
+    return LoginResponse(token=access_token, user=user)
+
+# Endpoint para verificar token
+@api_router.get("/verify-token", response_model=User)
+async def verify_token(current_user: User = Depends(get_current_user)):
+    return current_user
+
+# Endpoint para crear casting (solo productoras)
+@api_router.post("/castings", response_model=Casting)
+async def create_casting(
+    casting_data: CastingCreate,
+    current_user: User = Depends(get_current_user)
+):
+    # Verificar que sea productora
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden crear castings"
+        )
+    
+    # Crear objeto Casting
+    casting = Casting(
+        **casting_data.model_dump(),
+        productora_id=current_user.id,
+        productora_nombre=current_user.nombre
+    )
+    
+    # Preparar documento para MongoDB
+    doc = casting.model_dump()
+    doc['fecha_creacion'] = doc['fecha_creacion'].isoformat()
+    
+    # Insertar en la base de datos
+    try:
+        await db.castings.insert_one(doc)
+        logger.info(f"Casting creado: {casting.titulo} por {current_user.nombre}")
+        return casting
+    except Exception as e:
+        logger.error(f"Error al crear casting: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error al crear el casting"
+        )
+
+# Endpoint para obtener todos los castings activos
+@api_router.get("/castings", response_model=List[Casting])
+async def get_castings(current_user: User = Depends(get_current_user)):
+    # Obtener castings activos
+    castings = await db.castings.find(
+        {"estado": "activo"}, 
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Convertir fechas
+    for casting in castings:
+        if isinstance(casting['fecha_creacion'], str):
+            casting['fecha_creacion'] = datetime.fromisoformat(casting['fecha_creacion'])
+    
+    return castings
+
+# Endpoint para obtener castings de la productora actual
+@api_router.get("/mis-castings", response_model=List[Casting])
+async def get_mis_castings(current_user: User = Depends(get_current_user)):
+    # Verificar que sea productora
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden ver sus castings"
+        )
+    
+    # Obtener castings de la productora
+    castings = await db.castings.find(
+        {"productora_id": current_user.id},
+        {"_id": 0}
+    ).sort("fecha_creacion", -1).to_list(100)
+    
+    # Convertir fechas
+    for casting in castings:
+        if isinstance(casting['fecha_creacion'], str):
+            casting['fecha_creacion'] = datetime.fromisoformat(casting['fecha_creacion'])
+    
+    return castings
+
 # Include the router in the main app
 app.include_router(api_router)
 
