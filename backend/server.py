@@ -28,6 +28,13 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# JWT Configuration
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'gocast-secret-key-change-in-production')
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días
+
+security = HTTPBearer()
+
 
 # Define Models
 class StatusCheck(BaseModel):
