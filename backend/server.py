@@ -65,6 +65,76 @@ class User(BaseModel):
     fecha_registro: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     activo: bool = True
 
+# Login Model
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    user: User
+
+# Casting Models
+class CastingCreate(BaseModel):
+    titulo: str
+    descripcion: str
+    tipo: str = "actor"
+    genero: Optional[str] = None
+    edad_min: Optional[int] = None
+    edad_max: Optional[int] = None
+    requisitos: Optional[str] = None
+    ubicacion: str
+    fecha_limite: Optional[str] = None
+
+class Casting(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    titulo: str
+    descripcion: str
+    tipo: str
+    genero: Optional[str] = None
+    edad_min: Optional[int] = None
+    edad_max: Optional[int] = None
+    requisitos: Optional[str] = None
+    ubicacion: str
+    fecha_limite: Optional[str] = None
+    productora_id: str
+    productora_nombre: str
+    fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    estado: str = "activo"
+
+# Helper Functions
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="No se pudo validar el token")
+    
+    # Buscar usuario en la base de datos
+    user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if user_doc is None:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    
+    # Convertir fecha_registro si es string
+    if isinstance(user_doc['fecha_registro'], str):
+        user_doc['fecha_registro'] = datetime.fromisoformat(user_doc['fecha_registro'])
+    
+    return User(**user_doc)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
