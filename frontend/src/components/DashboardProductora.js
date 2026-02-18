@@ -50,15 +50,14 @@ const DashboardProductora = ({ user }) => {
 
   return (
     <div className="gocast-container">
-      <div className="dashboard-container">
-        {/* Header del Dashboard */}
+      <div className="dashboard-container" data-testid="dashboard-productora">
         <div className="dashboard-header">
           <div>
-            <h1 className="dashboard-title">Bienvenido, {user.nombre}! 🎬</h1>
+            <h1 className="dashboard-title">Bienvenido, {user.nombre}!</h1>
             <p className="dashboard-subtitle">Panel de Productora</p>
           </div>
           <button onClick={handleLogout} className="btn-logout" data-testid="logout-btn">
-            Cerrar Sesión
+            Cerrar Sesion
           </button>
         </div>
 
