@@ -105,6 +105,67 @@ class Casting(BaseModel):
     fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     estado: str = "activo"
 
+# Perfil de Talento Models
+class PerfilTalentoCreate(BaseModel):
+    tipo_talento: str
+    nombre_completo: str
+    edad: int
+    ciudad: str
+    pais: str
+    altura_cm: int
+    color_pelo: str
+    color_ojos: str
+    sexo: str
+    talla_camisa: str
+    talla_pantalon: str
+    talla_zapatos: str
+    descripcion_corta: str
+    talentos_especiales: Optional[str] = None
+    disponibilidad: List[str]  # ['lunes', 'martes', etc]
+    fotos: List[str] = []  # URLs de fotos
+    videos: List[str] = []  # URLs de videos
+
+class PerfilTalento(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    tipo_talento: str
+    nombre_completo: str
+    edad: int
+    ciudad: str
+    pais: str
+    altura_cm: int
+    color_pelo: str
+    color_ojos: str
+    sexo: str
+    talla_camisa: str
+    talla_pantalon: str
+    talla_zapatos: str
+    descripcion_corta: str
+    talentos_especiales: Optional[str] = None
+    disponibilidad: List[str]
+    fotos: List[str] = []
+    videos: List[str] = []
+    fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Aplicación a Casting Models
+class AplicacionCreate(BaseModel):
+    casting_id: str
+    mensaje: Optional[str] = None
+
+class Aplicacion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    casting_id: str
+    talento_id: str
+    talento_nombre: str
+    estado: str = "pendiente"  # pendiente, aceptada, rechazada
+    mensaje: Optional[str] = None
+    respuesta: Optional[str] = None
+    fecha_aplicacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
