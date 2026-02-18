@@ -205,6 +205,31 @@ class Invitacion(BaseModel):
     respuesta_talento: Optional[str] = None
     fecha_invitacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Shortlist Models para compartir con clientes
+class ShortlistTalento(BaseModel):
+    talento_id: str
+    rol_nombre: str
+    es_backup: bool = False
+    notas: Optional[str] = None
+
+class ShortlistCreate(BaseModel):
+    casting_id: str
+    nombre: str
+    talentos: List[ShortlistTalento]
+
+class Shortlist(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    casting_id: str
+    casting_titulo: str
+    productor_id: str
+    nombre: str
+    url_publica: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    talentos: List[dict] = []
+    estado: str = "activo"  # activo, cerrado
+    fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
