@@ -97,17 +97,24 @@ const DashboardTalento = ({ user }) => {
         {/* Sección de Castings Disponibles */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2 className="section-title">Castings Disponibles</h2>
+            <h2 className="section-title">Castings Recomendados Para Ti</h2>
             <Link to="/castings" className="btn-secondary-small">Ver Todos</Link>
           </div>
 
-          {loading ? (
+          {!perfilCompleto ? (
+            <div className="empty-state">
+              <p className="empty-icon">📋</p>
+              <p className="empty-title">Completa tu perfil para ver castings</p>
+              <p className="empty-text">Una vez completes tu perfil, verás aquí los castings que coinciden con tus características.</p>
+              <Link to="/completar-perfil" className="btn-primary">Completar Perfil</Link>
+            </div>
+          ) : loading ? (
             <p>Cargando castings...</p>
           ) : castings.length === 0 ? (
             <div className="empty-state">
               <p className="empty-icon">🎬</p>
               <p className="empty-title">No hay castings disponibles aún</p>
-              <p className="empty-text">Pronto las productoras comenzarán a publicar castings.</p>
+              <p className="empty-text">Pronto las productoras comenzarán a publicar castings que coincidan con tu perfil.</p>
             </div>
           ) : (
             <div className="castings-grid">
@@ -119,7 +126,7 @@ const DashboardTalento = ({ user }) => {
                     <span className="casting-type">{casting.tipo}</span>
                     <span className="casting-date">{new Date(casting.fecha_creacion).toLocaleDateString()}</span>
                   </div>
-                  <button className="btn-primary-small">Ver Detalles</button>
+                  <Link to={`/casting/${casting.id}`} className="btn-primary-small">Ver Detalles</Link>
                 </div>
               ))}
             </div>
