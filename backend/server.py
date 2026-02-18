@@ -1138,7 +1138,7 @@ async def get_preseleccionados(
     
     # Verificar que el casting pertenece al usuario
     casting = await db.castings.find_one({"id": casting_id})
-    if not casting or casting['productor_id'] != current_user.id:
+    if not casting or casting.get('productora_id') != current_user.id:
         raise HTTPException(status_code=404, detail="Casting no encontrado")
     
     aplicaciones = await db.aplicaciones.find(
