@@ -589,6 +589,46 @@ async def get_mis_aplicaciones(current_user: User = Depends(get_current_user)):
     
     return aplicaciones
 
+# Endpoint para obtener aplicaciones recibidas (productora)
+@api_router.get("/aplicaciones-recibidas")
+async def get_aplicaciones_recibidas(current_user: User = Depends(get_current_user)):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden ver aplicaciones recibidas"
+        )
+    
+    # Obtener los IDs de los castings de esta productora
+    mis_castings = await db.castings.find(
+        {"productor_id": current_user.id},
+        {"id": 1, "_id": 0}
+    ).to_list(100)
+    
+    casting_ids = [c['id'] for c in mis_castings]
+    
+    if not casting_ids:
+        return []
+    
+    # Obtener todas las aplicaciones a esos castings
+    aplicaciones = await db.aplicaciones.find(
+        {"casting_id": {"$in": casting_ids}},
+        {"_id": 0}
+    ).sort("fecha_aplicacion", -1).to_list(100)
+    
+    # Enriquecer con datos del talento
+    for app in aplicaciones:
+        if isinstance(app.get('fecha_aplicacion'), str):
+            app['fecha_aplicacion'] = datetime.fromisoformat(app['fecha_aplicacion'])
+        
+        # Obtener nombre del talento
+        perfil = await db.talent_profiles.find_one(
+            {"user_id": app.get('talento_id')},
+            {"nombre_completo": 1, "_id": 0}
+        )
+        app['talento_nombre'] = perfil.get('nombre_completo') if perfil else 'Talento'
+    
+    return aplicaciones
+
 # Endpoint para obtener detalle de un casting específico
 @api_router.get("/castings/{casting_id}", response_model=Casting)
 async def get_casting_detalle(
