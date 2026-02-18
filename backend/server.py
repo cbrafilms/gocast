@@ -630,37 +630,51 @@ async def get_castings_recomendados(current_user: User = Depends(get_current_use
         # Si no tiene perfil, retornar lista vacía
         return []
     
-    # Construir filtro dinámico
-    filtro = {"estado": "activo"}
+    # Obtener todos los castings activos
+    castings = await db.castings.find({"estado": "activo"}, {"_id": 0}).to_list(100)
     
-    # Filtrar por tipo de talento
-    if perfil.get('tipo_talento'):
-        filtro["tipo"] = perfil['tipo_talento'].lower()
-    
-    # Filtrar por género si el casting lo especifica
-    castings = await db.castings.find(filtro, {"_id": 0}).to_list(100)
-    
-    # Filtrar por edad
+    # Filtrar castings que tengan al menos un rol compatible
     castings_filtrados = []
     for casting in castings:
-        incluir = True
+        tiene_rol_compatible = False
         
-        # Filtro de género
-        if casting.get('genero') and perfil.get('sexo'):
-            if casting['genero'].lower() != 'cualquiera':
-                if casting['genero'].lower() != perfil['sexo'].lower():
-                    incluir = False
+        # Revisar cada rol del casting
+        for rol in casting.get('roles', []):
+            compatible = True
+            
+            # Filtro de tipo de talento
+            if rol.get('tipo_talento') and perfil.get('tipo_talento'):
+                if rol['tipo_talento'].lower() != perfil['tipo_talento'].lower():
+                    compatible = False
+            
+            # Filtro de género
+            if rol.get('sexo') and perfil.get('sexo'):
+                if rol['sexo'].lower() != 'cualquiera' and rol['sexo'].lower() != perfil['sexo'].lower():
+                    compatible = False
+            
+            # Filtro de edad
+            if rol.get('edad_min') and perfil.get('edad'):
+                if perfil['edad'] < rol['edad_min']:
+                    compatible = False
+            
+            if rol.get('edad_max') and perfil.get('edad'):
+                if perfil['edad'] > rol['edad_max']:
+                    compatible = False
+            
+            # Filtro de altura
+            if rol.get('altura_min') and perfil.get('altura_cm'):
+                if perfil['altura_cm'] < rol['altura_min']:
+                    compatible = False
+            
+            if rol.get('altura_max') and perfil.get('altura_cm'):
+                if perfil['altura_cm'] > rol['altura_max']:
+                    compatible = False
+            
+            if compatible:
+                tiene_rol_compatible = True
+                break
         
-        # Filtro de edad
-        if casting.get('edad_min') and perfil.get('edad'):
-            if perfil['edad'] < casting['edad_min']:
-                incluir = False
-        
-        if casting.get('edad_max') and perfil.get('edad'):
-            if perfil['edad'] > casting['edad_max']:
-                incluir = False
-        
-        if incluir:
+        if tiene_rol_compatible:
             if isinstance(casting['fecha_creacion'], str):
                 casting['fecha_creacion'] = datetime.fromisoformat(casting['fecha_creacion'])
             castings_filtrados.append(Casting(**casting))
