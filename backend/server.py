@@ -75,17 +75,33 @@ class LoginResponse(BaseModel):
     token: str
     user: User
 
-# Casting Models
+# Casting Models con Roles Múltiples
+class RolCasting(BaseModel):
+    nombre_rol: str  # "Papá", "Mamá", etc.
+    descripcion_rol: str
+    tipo_talento: str  # actor, modelo, etc.
+    sexo: Optional[str] = None
+    edad_min: Optional[int] = None
+    edad_max: Optional[int] = None
+    altura_min: Optional[int] = None
+    altura_max: Optional[int] = None
+    color_pelo: Optional[str] = None
+    color_ojos: Optional[str] = None
+    talla_camisa: Optional[str] = None
+    talla_pantalon: Optional[str] = None
+    talla_zapatos: Optional[str] = None
+    monto: Optional[float] = None  # Pago ofrecido
+
 class CastingCreate(BaseModel):
     titulo: str
     descripcion: str
-    tipo: str = "actor"
-    genero: Optional[str] = None
-    edad_min: Optional[int] = None
-    edad_max: Optional[int] = None
-    requisitos: Optional[str] = None
+    roles: List[RolCasting]  # Múltiples roles
     ubicacion: str
-    fecha_limite: Optional[str] = None
+    territorios: List[str]  # Países/continentes de exhibición
+    duracion_exhibicion: Optional[str] = None  # Tiempo de exhibición
+    fecha_limite_postulacion: Optional[str] = None
+    fecha_produccion: Optional[str] = None
+    requisitos_generales: Optional[str] = None
 
 class Casting(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -93,13 +109,13 @@ class Casting(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     titulo: str
     descripcion: str
-    tipo: str
-    genero: Optional[str] = None
-    edad_min: Optional[int] = None
-    edad_max: Optional[int] = None
-    requisitos: Optional[str] = None
+    roles: List[dict]  # Lista de roles
     ubicacion: str
-    fecha_limite: Optional[str] = None
+    territorios: List[str]
+    duracion_exhibicion: Optional[str] = None
+    fecha_limite_postulacion: Optional[str] = None
+    fecha_produccion: Optional[str] = None
+    requisitos_generales: Optional[str] = None
     productora_id: str
     productora_nombre: str
     fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
