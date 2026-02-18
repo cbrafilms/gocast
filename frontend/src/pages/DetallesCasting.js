@@ -82,19 +82,14 @@ const DetallesCasting = () => {
     setErrorMessage('');
 
     try {
-      await axios.post(
-        `${API}/aplicaciones`,
-        { casting_id: id, mensaje },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post(`${API}/aplicaciones`, { casting_id: id, mensaje }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      setSuccessMessage('¡Aplicación enviada exitosamente!');
+      setSuccessMessage('Aplicacion enviada exitosamente!');
       setYaAplico(true);
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+      setTimeout(() => navigate('/dashboard'), 2000);
     } catch (error) {
-      console.error('Error al aplicar:', error);
       setErrorMessage(error.response?.data?.detail || 'Error al aplicar al casting');
     } finally {
       setAplicando(false);
@@ -114,24 +109,15 @@ const DetallesCasting = () => {
         params.append('mensaje_respuesta', motivoRechazo);
       }
 
-      await axios.put(
-        `${API}/invitaciones/${invitacion.id}/responder?${params.toString()}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${API}/invitaciones/${invitacion.id}/responder?${params.toString()}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      setSuccessMessage(respuesta === 'aceptada' 
-        ? '¡Has aceptado la invitación!' 
-        : 'Has rechazado la invitación');
-      
+      setSuccessMessage(respuesta === 'aceptada' ? 'Has aceptado la invitacion!' : 'Has rechazado la invitacion');
       setInvitacion(prev => ({ ...prev, estado: respuesta }));
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+      setTimeout(() => navigate('/dashboard'), 2000);
     } catch (error) {
-      console.error('Error al responder:', error);
-      setErrorMessage(error.response?.data?.detail || 'Error al responder la invitación');
+      setErrorMessage(error.response?.data?.detail || 'Error al responder la invitacion');
     } finally {
       setRespondiendo(false);
     }
@@ -162,25 +148,23 @@ const DetallesCasting = () => {
     <div className="gocast-page">
       <div className="gocast-container">
         <div className="detalle-casting-container" data-testid="casting-detail">
-          <Link to="/dashboard" className="back-link">← Volver al Dashboard</Link>
+          <Link to="/dashboard" className="back-link">Volver al Dashboard</Link>
           
-          {/* Header */}
           <div className="casting-detalle-card">
             <div className="casting-detalle-header">
               <h1 className="casting-detalle-title" data-testid="casting-title">{casting.titulo}</h1>
               <span className={`casting-badge casting-badge-${casting.estado}`}>
-                {casting.estado.toUpperCase()}
+                {casting.estado?.toUpperCase()}
               </span>
             </div>
 
-            {/* Info General */}
             <div className="casting-detalle-info">
               <div className="info-row">
                 <span className="info-label">Productora:</span>
                 <span className="info-value">{casting.productora_nombre}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Ubicación:</span>
+                <span className="info-label">Ubicacion:</span>
                 <span className="info-value">{casting.ubicacion}</span>
               </div>
               {casting.territorios && casting.territorios.length > 0 && (
@@ -189,40 +173,13 @@ const DetallesCasting = () => {
                   <span className="info-value">{casting.territorios.join(', ')}</span>
                 </div>
               )}
-              {casting.duracion_exhibicion && (
-                <div className="info-row">
-                  <span className="info-label">Duración:</span>
-                  <span className="info-value">{casting.duracion_exhibicion}</span>
-                </div>
-              )}
-              {casting.fecha_limite_postulacion && (
-                <div className="info-row">
-                  <span className="info-label">Fecha Límite:</span>
-                  <span className="info-value">{new Date(casting.fecha_limite_postulacion).toLocaleDateString()}</span>
-                </div>
-              )}
-              {casting.fecha_produccion && (
-                <div className="info-row">
-                  <span className="info-label">Producción:</span>
-                  <span className="info-value">{new Date(casting.fecha_produccion).toLocaleDateString()}</span>
-                </div>
-              )}
             </div>
 
-            {/* Descripción */}
             <div className="casting-detalle-section">
-              <h3 className="section-subtitle">Descripción del Proyecto</h3>
+              <h3 className="section-subtitle">Descripcion del Proyecto</h3>
               <p className="casting-descripcion-completa">{casting.descripcion}</p>
             </div>
 
-            {casting.requisitos_generales && (
-              <div className="casting-detalle-section">
-                <h3 className="section-subtitle">Requisitos Generales</h3>
-                <p className="casting-descripcion-completa">{casting.requisitos_generales}</p>
-              </div>
-            )}
-
-            {/* Roles del Casting */}
             {casting.roles && casting.roles.length > 0 && (
               <div className="casting-detalle-section">
                 <h3 className="section-subtitle">Roles Disponibles ({casting.roles.length})</h3>
@@ -231,38 +188,18 @@ const DetallesCasting = () => {
                     <div key={index} className="rol-detail-card" data-testid={`rol-${index}`}>
                       <div className="rol-detail-header">
                         <h4 className="rol-detail-title">{rol.nombre_rol}</h4>
-                        {rol.monto && (
-                          <span className="rol-monto">${rol.monto} USD</span>
-                        )}
+                        {rol.monto && <span className="rol-monto">${rol.monto} USD</span>}
                       </div>
                       <p className="rol-descripcion">{rol.descripcion_rol}</p>
                       
                       <div className="rol-requisitos">
-                        {rol.tipo_talento && (
-                          <span className="requisito-tag">Tipo: {rol.tipo_talento}</span>
-                        )}
-                        {rol.sexo && (
-                          <span className="requisito-tag">Género: {rol.sexo}</span>
-                        )}
+                        {rol.tipo_talento && <span className="requisito-tag">Tipo: {rol.tipo_talento}</span>}
+                        {rol.sexo && <span className="requisito-tag">Genero: {rol.sexo}</span>}
                         {(rol.edad_min || rol.edad_max) && (
-                          <span className="requisito-tag">
-                            Edad: {rol.edad_min || '?'} - {rol.edad_max || '?'} años
-                          </span>
+                          <span className="requisito-tag">Edad: {rol.edad_min || '?'} - {rol.edad_max || '?'}</span>
                         )}
-                        {(rol.altura_min || rol.altura_max) && (
-                          <span className="requisito-tag">
-                            Altura: {rol.altura_min || '?'} - {rol.altura_max || '?'} cm
-                          </span>
-                        )}
-                        {rol.color_pelo && (
-                          <span className="requisito-tag">Pelo: {rol.color_pelo}</span>
-                        )}
-                        {rol.color_ojos && (
-                          <span className="requisito-tag">Ojos: {rol.color_ojos}</span>
-                        )}
-                        {rol.talla_camisa && (
-                          <span className="requisito-tag">Camisa: {rol.talla_camisa}</span>
-                        )}
+                        {rol.color_pelo && <span className="requisito-tag">Pelo: {rol.color_pelo}</span>}
+                        {rol.color_ojos && <span className="requisito-tag">Ojos: {rol.color_ojos}</span>}
                       </div>
                     </div>
                   ))}
@@ -270,103 +207,57 @@ const DetallesCasting = () => {
               </div>
             )}
 
-            {/* Sección para Talentos */}
             {user && user.tipo_usuario === 'talento' && (
               <div className="aplicar-section">
-                {successMessage && (
-                  <div className="success-message" data-testid="success-msg">{successMessage}</div>
-                )}
-                
-                {errorMessage && (
-                  <div className="error-message" data-testid="error-msg">{errorMessage}</div>
-                )}
+                {successMessage && <div className="success-message" data-testid="success-msg">{successMessage}</div>}
+                {errorMessage && <div className="error-message" data-testid="error-msg">{errorMessage}</div>}
 
-                {/* Si tiene invitación pendiente */}
                 {invitacion && invitacion.estado === 'pendiente' && (
                   <div className="invitacion-card" data-testid="invitacion-pendiente">
-                    <h3 className="section-subtitle">📧 Tienes una Invitación</h3>
+                    <h3 className="section-subtitle">Tienes una Invitacion</h3>
                     <p className="invitacion-info">
                       <strong>{casting.productora_nombre}</strong> te ha invitado para el rol de <strong>{invitacion.rol_nombre}</strong>
                     </p>
-                    {invitacion.mensaje && (
-                      <p className="invitacion-mensaje">"{invitacion.mensaje}"</p>
-                    )}
                     
                     <div className="invitacion-actions">
-                      <button
-                        onClick={() => handleResponderInvitacion('aceptada')}
-                        disabled={respondiendo}
-                        className="btn-accept"
-                        data-testid="btn-aceptar"
-                      >
-                        ✅ Aceptar Invitación
+                      <button onClick={() => handleResponderInvitacion('aceptada')} disabled={respondiendo} className="btn-accept" data-testid="btn-aceptar">
+                        Aceptar Invitacion
                       </button>
                       
                       <div className="rechazo-section">
-                        <textarea
-                          value={motivoRechazo}
-                          onChange={(e) => setMotivoRechazo(e.target.value)}
-                          placeholder="Motivo del rechazo (opcional)"
-                          className="form-input"
-                          rows="2"
-                        />
-                        <button
-                          onClick={() => handleResponderInvitacion('rechazada')}
-                          disabled={respondiendo}
-                          className="btn-reject"
-                          data-testid="btn-rechazar"
-                        >
-                          ❌ Rechazar
+                        <textarea value={motivoRechazo} onChange={(e) => setMotivoRechazo(e.target.value)} placeholder="Motivo del rechazo (opcional)" className="form-input" rows="2" />
+                        <button onClick={() => handleResponderInvitacion('rechazada')} disabled={respondiendo} className="btn-reject" data-testid="btn-rechazar">
+                          Rechazar
                         </button>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Si ya respondió la invitación */}
                 {invitacion && invitacion.estado !== 'pendiente' && (
                   <div className={`alert-info ${invitacion.estado === 'aceptada' ? 'alert-success' : 'alert-rejected'}`}>
                     <p className="alert-title">
-                      {invitacion.estado === 'aceptada' ? '✅ Invitación Aceptada' : '❌ Invitación Rechazada'}
-                    </p>
-                    <p className="alert-text">
-                      {invitacion.estado === 'aceptada' 
-                        ? 'Has aceptado participar en este casting. La productora se pondrá en contacto contigo.' 
-                        : 'Rechazaste esta invitación.'}
+                      {invitacion.estado === 'aceptada' ? 'Invitacion Aceptada' : 'Invitacion Rechazada'}
                     </p>
                   </div>
                 )}
 
-                {/* Si ya aplicó */}
                 {yaAplico && !invitacion && (
                   <div className="alert-info">
-                    <p className="alert-title">✅ Ya aplicaste a este casting</p>
-                    <p className="alert-text">La productora revisará tu aplicación y te contactará si eres seleccionado.</p>
+                    <p className="alert-title">Ya aplicaste a este casting</p>
+                    <p className="alert-text">La productora revisara tu aplicacion y te contactara si eres seleccionado.</p>
                   </div>
                 )}
 
-                {/* Formulario para aplicar (si no tiene invitación ni aplicación) */}
                 {!yaAplico && !invitacion && (
                   <>
                     <h3 className="section-subtitle">Aplicar a este Casting</h3>
                     <div className="form-group">
                       <label className="form-label">Mensaje para la Productora (Opcional)</label>
-                      <textarea
-                        className="form-input"
-                        rows="4"
-                        value={mensaje}
-                        onChange={(e) => setMensaje(e.target.value)}
-                        placeholder="Cuéntales por qué eres el indicado para este proyecto..."
-                        data-testid="mensaje-input"
-                      />
+                      <textarea className="form-input" rows="4" value={mensaje} onChange={(e) => setMensaje(e.target.value)} placeholder="Cuentales por que eres el indicado para este proyecto..." data-testid="mensaje-input" />
                     </div>
-                    <button
-                      onClick={handleAplicar}
-                      disabled={aplicando}
-                      className="btn-submit"
-                      data-testid="btn-aplicar"
-                    >
-                      {aplicando ? 'Enviando Aplicación...' : 'Aplicar Ahora'}
+                    <button onClick={handleAplicar} disabled={aplicando} className="btn-submit" data-testid="btn-aplicar">
+                      {aplicando ? 'Enviando Aplicacion...' : 'Aplicar Ahora'}
                     </button>
                   </>
                 )}
