@@ -15,6 +15,7 @@ import CrearCasting from "@/pages/CrearCasting";
 import CompletarPerfil from "@/pages/CompletarPerfil";
 import DetallesCasting from "@/pages/DetallesCasting";
 import EditarPerfil from "@/pages/EditarPerfil";
+import BuscarTalentos from "@/pages/BuscarTalentos";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
               <Route path="/completar-perfil" element={<CompletarPerfil />} />
               <Route path="/casting/:id" element={<DetallesCasting />} />
               <Route path="/editar-perfil" element={<EditarPerfil />} />
+              <Route path="/buscar-talentos" element={<BuscarTalentos />} />
             </Routes>
           </Layout>
         </AuthProvider>
