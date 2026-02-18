@@ -996,6 +996,169 @@ async def responder_invitacion(
     
     return {"message": f"Invitación {respuesta} exitosamente"}
 
+# ===== ENDPOINTS DE SHORTLIST =====
+
+# Crear un shortlist para compartir con clientes
+@api_router.post("/shortlists")
+async def crear_shortlist(
+    shortlist_data: ShortlistCreate,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden crear shortlists"
+        )
+    
+    # Verificar que el casting existe y pertenece al usuario
+    casting = await db.castings.find_one({"id": shortlist_data.casting_id})
+    if not casting:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+    if casting['productor_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para este casting")
+    
+    # Obtener info de los talentos seleccionados
+    talentos_info = []
+    for talento_sel in shortlist_data.talentos:
+        perfil = await db.perfiles_talento.find_one(
+            {"user_id": talento_sel.talento_id},
+            {"_id": 0}
+        )
+        if perfil:
+            talentos_info.append({
+                "talento_id": talento_sel.talento_id,
+                "nombre_completo": perfil.get('nombre_completo'),
+                "tipo_talento": perfil.get('tipo_talento'),
+                "edad": perfil.get('edad'),
+                "altura_cm": perfil.get('altura_cm'),
+                "ciudad": perfil.get('ciudad'),
+                "pais": perfil.get('pais'),
+                "color_pelo": perfil.get('color_pelo'),
+                "color_ojos": perfil.get('color_ojos'),
+                "sexo": perfil.get('sexo'),
+                "talla_camisa": perfil.get('talla_camisa'),
+                "descripcion_corta": perfil.get('descripcion_corta'),
+                "rol_nombre": talento_sel.rol_nombre,
+                "es_backup": talento_sel.es_backup,
+                "notas": talento_sel.notas
+            })
+    
+    # Crear el shortlist
+    shortlist = Shortlist(
+        casting_id=shortlist_data.casting_id,
+        casting_titulo=casting['titulo'],
+        productor_id=current_user.id,
+        nombre=shortlist_data.nombre,
+        talentos=talentos_info
+    )
+    
+    await db.shortlists.insert_one(shortlist.model_dump())
+    
+    return {
+        "id": shortlist.id,
+        "url_publica": shortlist.url_publica,
+        "mensaje": "Shortlist creado exitosamente"
+    }
+
+# Obtener shortlists de un casting
+@api_router.get("/castings/{casting_id}/shortlists")
+async def get_shortlists_casting(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar que el casting pertenece al usuario
+    casting = await db.castings.find_one({"id": casting_id})
+    if not casting or casting['productor_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+    
+    shortlists = await db.shortlists.find(
+        {"casting_id": casting_id, "productor_id": current_user.id},
+        {"_id": 0}
+    ).to_list(50)
+    
+    return shortlists
+
+# Ver shortlist publico (para clientes sin auth)
+@api_router.get("/shortlist/{url_publica}")
+async def ver_shortlist_publico(url_publica: str):
+    shortlist = await db.shortlists.find_one(
+        {"url_publica": url_publica, "estado": "activo"},
+        {"_id": 0, "productor_id": 0}
+    )
+    
+    if not shortlist:
+        raise HTTPException(status_code=404, detail="Shortlist no encontrado o inactivo")
+    
+    return shortlist
+
+# Preseleccionar/agregar talento al shortlist desde aplicaciones
+@api_router.post("/aplicaciones/{aplicacion_id}/preseleccionar")
+async def preseleccionar_aplicacion(
+    aplicacion_id: str,
+    es_backup: bool = False,
+    notas: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Obtener la aplicacion
+    aplicacion = await db.aplicaciones.find_one({"id": aplicacion_id})
+    if not aplicacion:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    
+    # Verificar que el casting pertenece al usuario
+    casting = await db.castings.find_one({"id": aplicacion['casting_id']})
+    if not casting or casting['productor_id'] != current_user.id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Actualizar el estado de la aplicacion
+    await db.aplicaciones.update_one(
+        {"id": aplicacion_id},
+        {"$set": {
+            "estado": "preseleccionado",
+            "es_backup": es_backup,
+            "notas_productora": notas
+        }}
+    )
+    
+    return {"message": "Talento preseleccionado exitosamente"}
+
+# Obtener aplicaciones preseleccionadas de un casting
+@api_router.get("/castings/{casting_id}/preseleccionados")
+async def get_preseleccionados(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar que el casting pertenece al usuario
+    casting = await db.castings.find_one({"id": casting_id})
+    if not casting or casting['productor_id'] != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+    
+    aplicaciones = await db.aplicaciones.find(
+        {"casting_id": casting_id, "estado": "preseleccionado"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Enriquecer con datos del talento
+    resultado = []
+    for app in aplicaciones:
+        perfil = await db.perfiles_talento.find_one(
+            {"user_id": app['talento_id']},
+            {"_id": 0}
+        )
+        if perfil:
+            app['talento_perfil'] = perfil
+            resultado.append(app)
+    
+    return resultado
+
 # Include the router in the main app
 app.include_router(api_router)
 
