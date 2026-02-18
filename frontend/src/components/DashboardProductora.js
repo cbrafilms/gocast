@@ -61,27 +61,26 @@ const DashboardProductora = ({ user }) => {
           </button>
         </div>
 
-        {/* Stats Cards */}
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">🎬</div>
+            <div className="stat-icon">📋</div>
             <div className="stat-content">
               <p className="stat-label">Castings Activos</p>
               <p className="stat-value">{castings.filter(c => c.estado === 'activo').length}</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">👥</div>
+            <div className="stat-icon">📥</div>
             <div className="stat-content">
-              <p className="stat-label">Aplicaciones</p>
-              <p className="stat-value">0</p>
+              <p className="stat-label">Aplicaciones Pendientes</p>
+              <p className="stat-value">{aplicacionesPendientes.length}</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">📊</div>
+            <div className="stat-icon">🔍</div>
             <div className="stat-content">
-              <p className="stat-label">Total Castings</p>
-              <p className="stat-value">{castings.length}</p>
+              <p className="stat-label">Buscar Talentos</p>
+              <Link to="/buscar-talentos" className="btn-primary-small">Explorar</Link>
             </div>
           </div>
         </div>
