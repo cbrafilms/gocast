@@ -85,16 +85,13 @@ const DashboardProductora = ({ user }) => {
           </div>
         </div>
 
-        {/* Botón Crear Casting */}
         <div className="dashboard-section">
-          <Link to="/crear-casting" className="btn-primary-large" data-testid="create-casting-btn">
-            ➕ Crear Nuevo Casting
-          </Link>
-        </div>
-
-        {/* Mis Castings */}
-        <div className="dashboard-section">
-          <h2 className="section-title">Mis Castings</h2>
+          <div className="section-header">
+            <h2 className="section-title">Mis Castings</h2>
+            <Link to="/crear-casting" className="btn-primary" data-testid="crear-casting-btn">
+              + Crear Nuevo Casting
+            </Link>
+          </div>
 
           {loading ? (
             <p>Cargando castings...</p>
