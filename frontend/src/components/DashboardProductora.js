@@ -30,6 +30,17 @@ const DashboardProductora = ({ user }) => {
     }
   };
 
+  const fetchAplicaciones = async () => {
+    try {
+      const response = await axios.get(`${API}/aplicaciones-recibidas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAplicaciones(response.data);
+    } catch (error) {
+      console.error('Error al cargar aplicaciones:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     window.location.href = '/';
