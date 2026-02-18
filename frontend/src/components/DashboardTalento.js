@@ -10,14 +10,27 @@ const DashboardTalento = ({ user }) => {
   const { logout, token } = useAuth();
   const [castings, setCastings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [perfilCompleto, setPerfilCompleto] = useState(false);
 
   useEffect(() => {
     fetchCastings();
+    checkPerfil();
   }, []);
+
+  const checkPerfil = async () => {
+    try {
+      await axios.get(`${API}/perfil-talento`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPerfilCompleto(true);
+    } catch (error) {
+      setPerfilCompleto(false);
+    }
+  };
 
   const fetchCastings = async () => {
     try {
-      const response = await axios.get(`${API}/castings`, {
+      const response = await axios.get(`${API}/castings-recomendados`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCastings(response.data);
