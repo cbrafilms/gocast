@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
@@ -19,6 +19,9 @@ const BuscarTalentos = () => {
     altura_max: '',
     color_pelo: '',
     color_ojos: '',
+    talla_camisa: '',
+    talla_pantalon: '',
+    talla_zapatos: '',
     ciudad: '',
     pais: ''
   });
@@ -29,6 +32,7 @@ const BuscarTalentos = () => {
   const [selectedTalent, setSelectedTalent] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [misCastings, setMisCastings] = useState([]);
+  const [loadingCastings, setLoadingCastings] = useState(false);
   const [inviteData, setInviteData] = useState({
     casting_id: '',
     rol_nombre: '',
@@ -36,6 +40,29 @@ const BuscarTalentos = () => {
   });
   const [inviteSuccess, setInviteSuccess] = useState('');
   const [inviteError, setInviteError] = useState('');
+
+  // Cargar castings al montar el componente
+  useEffect(() => {
+    if (user && user.tipo_usuario === 'productora') {
+      cargarMisCastings();
+    }
+  }, [user, token]);
+
+  const cargarMisCastings = async () => {
+    setLoadingCastings(true);
+    try {
+      const response = await axios.get(`${API}/mis-castings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Castings cargados:', response.data);
+      const castingsActivos = response.data.filter(c => c.estado === 'activo');
+      setMisCastings(castingsActivos);
+    } catch (error) {
+      console.error('Error al cargar castings:', error);
+    } finally {
+      setLoadingCastings(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,6 +102,9 @@ const BuscarTalentos = () => {
       altura_max: '',
       color_pelo: '',
       color_ojos: '',
+      talla_camisa: '',
+      talla_pantalon: '',
+      talla_zapatos: '',
       ciudad: '',
       pais: ''
     });
@@ -82,27 +112,21 @@ const BuscarTalentos = () => {
     setSearched(false);
   };
 
-  const openInviteModal = async (talento) => {
+  const openInviteModal = (talento) => {
     setSelectedTalent(talento);
     setInviteSuccess('');
     setInviteError('');
-    
-    // Cargar mis castings
-    try {
-      const response = await axios.get(`${API}/mis-castings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMisCastings(response.data.filter(c => c.estado === 'activo'));
-    } catch (error) {
-      console.error('Error al cargar castings:', error);
-    }
-    
+    setInviteData({ casting_id: '', rol_nombre: '', mensaje: '' });
     setShowInviteModal(true);
   };
 
   const handleInvite = async () => {
-    if (!inviteData.casting_id || !inviteData.rol_nombre) {
-      setInviteError('Selecciona un casting y un rol');
+    if (!inviteData.casting_id) {
+      setInviteError('Selecciona un casting');
+      return;
+    }
+    if (!inviteData.rol_nombre) {
+      setInviteError('Selecciona un rol');
       return;
     }
 
@@ -116,13 +140,13 @@ const BuscarTalentos = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setInviteSuccess('¡Invitación enviada exitosamente!');
+      setInviteSuccess('Invitacion enviada exitosamente!');
       setTimeout(() => {
         setShowInviteModal(false);
         setInviteData({ casting_id: '', rol_nombre: '', mensaje: '' });
       }, 2000);
     } catch (error) {
-      setInviteError(error.response?.data?.detail || 'Error al enviar invitación');
+      setInviteError(error.response?.data?.detail || 'Error al enviar invitacion');
     }
   };
 
@@ -150,9 +174,8 @@ const BuscarTalentos = () => {
             <p className="page-subtitle">Encuentra el talento perfecto para tu proyecto</p>
           </div>
 
-          {/* Filtros */}
           <form onSubmit={handleSearch} className="filtros-card">
-            <h2 className="card-title">Filtros de Búsqueda</h2>
+            <h2 className="card-title">Filtros de Busqueda</h2>
             
             <div className="filtros-grid">
               <div className="form-group">
@@ -163,13 +186,13 @@ const BuscarTalentos = () => {
                   <option value="modelo">Modelo</option>
                   <option value="voz">Voz en Off</option>
                   <option value="extra">Extra</option>
-                  <option value="bailarin">Bailarín</option>
-                  <option value="musico">Músico</option>
+                  <option value="bailarin">Bailarin</option>
+                  <option value="musico">Musico</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Género</label>
+                <label className="form-label">Genero</label>
                 <select name="sexo" value={filtros.sexo} onChange={handleChange} className="form-input">
                   <option value="">Cualquiera</option>
                   <option value="masculino">Masculino</option>
@@ -179,22 +202,22 @@ const BuscarTalentos = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Edad Mínima</label>
+                <label className="form-label">Edad Minima</label>
                 <input type="number" name="edad_min" value={filtros.edad_min} onChange={handleChange} className="form-input" placeholder="18" min="0" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Edad Máxima</label>
+                <label className="form-label">Edad Maxima</label>
                 <input type="number" name="edad_max" value={filtros.edad_max} onChange={handleChange} className="form-input" placeholder="65" min="0" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Altura Mín (cm)</label>
+                <label className="form-label">Altura Min (cm)</label>
                 <input type="number" name="altura_min" value={filtros.altura_min} onChange={handleChange} className="form-input" placeholder="150" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Altura Máx (cm)</label>
+                <label className="form-label">Altura Max (cm)</label>
                 <input type="number" name="altura_max" value={filtros.altura_max} onChange={handleChange} className="form-input" placeholder="190" />
               </div>
 
@@ -203,7 +226,7 @@ const BuscarTalentos = () => {
                 <select name="color_pelo" value={filtros.color_pelo} onChange={handleChange} className="form-input">
                   <option value="">Cualquiera</option>
                   <option value="negro">Negro</option>
-                  <option value="castaño">Castaño</option>
+                  <option value="castano">Castano</option>
                   <option value="rubio">Rubio</option>
                   <option value="pelirrojo">Pelirrojo</option>
                   <option value="gris">Gris/Canoso</option>
@@ -223,19 +246,42 @@ const BuscarTalentos = () => {
               </div>
 
               <div className="form-group">
+                <label className="form-label">Talla Camisa</label>
+                <select name="talla_camisa" value={filtros.talla_camisa} onChange={handleChange} className="form-input">
+                  <option value="">Cualquiera</option>
+                  <option value="XS">XS</option>
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Talla Pantalon</label>
+                <input type="text" name="talla_pantalon" value={filtros.talla_pantalon} onChange={handleChange} className="form-input" placeholder="Ej: 32" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Talla Zapatos</label>
+                <input type="text" name="talla_zapatos" value={filtros.talla_zapatos} onChange={handleChange} className="form-input" placeholder="Ej: 42" />
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">Ciudad</label>
                 <input type="text" name="ciudad" value={filtros.ciudad} onChange={handleChange} className="form-input" placeholder="Buenos Aires" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">País</label>
+                <label className="form-label">Pais</label>
                 <input type="text" name="pais" value={filtros.pais} onChange={handleChange} className="form-input" placeholder="Argentina" />
               </div>
             </div>
 
             <div className="filtros-actions">
               <button type="submit" className="btn-primary" disabled={loading} data-testid="btn-buscar">
-                {loading ? 'Buscando...' : '🔍 Buscar Talentos'}
+                {loading ? 'Buscando...' : 'Buscar Talentos'}
               </button>
               <button type="button" onClick={handleClearFilters} className="btn-secondary">
                 Limpiar Filtros
@@ -243,7 +289,6 @@ const BuscarTalentos = () => {
             </div>
           </form>
 
-          {/* Resultados */}
           <div className="resultados-section">
             {loading ? (
               <p className="loading-text">Buscando talentos...</p>
@@ -251,14 +296,14 @@ const BuscarTalentos = () => {
               <div className="empty-state">
                 <p className="empty-icon">🔍</p>
                 <p className="empty-title">No se encontraron talentos</p>
-                <p className="empty-text">Intenta ajustar los filtros de búsqueda</p>
+                <p className="empty-text">Intenta ajustar los filtros de busqueda</p>
               </div>
             ) : resultados.length > 0 ? (
               <>
                 <h2 className="section-title">{resultados.length} Talento(s) Encontrado(s)</h2>
                 <div className="talentos-grid">
                   {resultados.map((talento) => (
-                    <div key={talento.id} className="talento-card" data-testid="talento-card">
+                    <div key={talento.id || talento.user_id} className="talento-card" data-testid="talento-card">
                       <div className="talento-avatar">
                         {talento.nombre_completo?.charAt(0) || '?'}
                       </div>
@@ -266,13 +311,13 @@ const BuscarTalentos = () => {
                       <p className="talento-tipo">{talento.tipo_talento}</p>
                       
                       <div className="talento-atributos">
-                        <span className="atributo">{talento.edad} años</span>
+                        <span className="atributo">{talento.edad} anos</span>
                         <span className="atributo">{talento.altura_cm} cm</span>
                         <span className="atributo">{talento.sexo}</span>
                       </div>
                       
                       <div className="talento-ubicacion">
-                        📍 {talento.ciudad}, {talento.pais}
+                        {talento.ciudad}, {talento.pais}
                       </div>
                       
                       <p className="talento-descripcion">{talento.descripcion_corta?.substring(0, 80)}...</p>
@@ -281,13 +326,17 @@ const BuscarTalentos = () => {
                         <span>Pelo: {talento.color_pelo}</span>
                         <span>Ojos: {talento.color_ojos}</span>
                       </div>
+
+                      {talento.talla_camisa && (
+                        <div className="talento-tallas">
+                          <span>Camisa: {talento.talla_camisa}</span>
+                          {talento.talla_pantalon && <span>Pantalon: {talento.talla_pantalon}</span>}
+                          {talento.talla_zapatos && <span>Zapatos: {talento.talla_zapatos}</span>}
+                        </div>
+                      )}
                       
-                      <button 
-                        onClick={() => openInviteModal(talento)} 
-                        className="btn-invite"
-                        data-testid="btn-invitar"
-                      >
-                        📧 Invitar a Casting
+                      <button onClick={() => openInviteModal(talento)} className="btn-invite" data-testid="btn-invitar">
+                        Invitar a Casting
                       </button>
                     </div>
                   ))}
@@ -296,7 +345,6 @@ const BuscarTalentos = () => {
             ) : null}
           </div>
 
-          {/* Modal de Invitación */}
           {showInviteModal && (
             <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
               <div className="modal-content" onClick={e => e.stopPropagation()} data-testid="invite-modal">
@@ -307,19 +355,30 @@ const BuscarTalentos = () => {
                 
                 <div className="form-group">
                   <label className="form-label">Seleccionar Casting *</label>
-                  <select 
-                    value={inviteData.casting_id} 
-                    onChange={(e) => setInviteData(prev => ({ ...prev, casting_id: e.target.value, rol_nombre: '' }))}
-                    className="form-input"
-                  >
-                    <option value="">-- Selecciona un casting --</option>
-                    {misCastings.map(casting => (
-                      <option key={casting.id} value={casting.id}>{casting.titulo}</option>
-                    ))}
-                  </select>
+                  {loadingCastings ? (
+                    <p>Cargando castings...</p>
+                  ) : misCastings.length === 0 ? (
+                    <div className="alert-warning">
+                      <p>No tienes castings activos.</p>
+                      <Link to="/crear-casting" className="btn-primary-small">Crear Casting</Link>
+                    </div>
+                  ) : (
+                    <select 
+                      value={inviteData.casting_id} 
+                      onChange={(e) => setInviteData(prev => ({ ...prev, casting_id: e.target.value, rol_nombre: '' }))}
+                      className="form-input"
+                    >
+                      <option value="">-- Selecciona un casting --</option>
+                      {misCastings.map(casting => (
+                        <option key={casting.id} value={casting.id}>
+                          {casting.titulo} ({casting.roles?.length || 0} roles)
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
-                {selectedCasting && selectedCasting.roles && (
+                {selectedCasting && selectedCasting.roles && selectedCasting.roles.length > 0 && (
                   <div className="form-group">
                     <label className="form-label">Seleccionar Rol *</label>
                     <select 
@@ -347,8 +406,12 @@ const BuscarTalentos = () => {
                 </div>
 
                 <div className="modal-actions">
-                  <button onClick={handleInvite} className="btn-primary">
-                    Enviar Invitación
+                  <button 
+                    onClick={handleInvite} 
+                    className="btn-primary"
+                    disabled={!inviteData.casting_id || !inviteData.rol_nombre}
+                  >
+                    Enviar Invitacion
                   </button>
                   <button onClick={() => setShowInviteModal(false)} className="btn-secondary">
                     Cancelar
