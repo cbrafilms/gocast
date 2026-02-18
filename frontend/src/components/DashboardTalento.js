@@ -141,9 +141,10 @@ const DashboardTalento = ({ user }) => {
               <p><strong>Nombre:</strong> {user.nombre}</p>
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Tipo:</strong> Talento</p>
+              <p><strong>Estado del Perfil:</strong> {perfilCompleto ? '✅ Completo' : '⚠️ Incompleto'}</p>
               <p><strong>Miembro desde:</strong> {new Date(user.fecha_registro).toLocaleDateString()}</p>
             </div>
-            <Link to="/perfil" className="btn-primary-small">Editar Perfil</Link>
+            <Link to="/editar-perfil" className="btn-primary-small">Editar Perfil</Link>
           </div>
         </div>
       </div>
