@@ -122,12 +122,48 @@ const DashboardProductora = ({ user }) => {
           )}
         </div>
 
-        {/* Buscar Talentos */}
+        {aplicacionesPendientes.length > 0 && (
+          <div className="dashboard-section">
+            <h2 className="section-title">Aplicaciones Recientes</h2>
+            <div className="aplicaciones-list">
+              {aplicacionesPendientes.slice(0, 5).map((app) => (
+                <div key={app.id} className="aplicacion-item">
+                  <div className="aplicacion-info">
+                    <span className="aplicacion-talento">{app.talento_nombre || 'Talento'}</span>
+                    <span className="aplicacion-casting">Para: {app.casting_id}</span>
+                  </div>
+                  <span className="aplicacion-fecha">
+                    {new Date(app.fecha_aplicacion).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="dashboard-section">
-          <h2 className="section-title">Buscar Talentos</h2>
-          <div className="search-card">
-            <p className="search-text">Encuentra el talento perfecto para tu proyecto</p>
-            <Link to="/buscar-talentos" className="btn-secondary">Ir a Búsqueda</Link>
+          <h2 className="section-title">Acciones Rapidas</h2>
+          <div className="actions-grid">
+            <Link to="/crear-casting" className="action-card">
+              <span className="action-icon">➕</span>
+              <span className="action-text">Crear Casting</span>
+            </Link>
+            <Link to="/buscar-talentos" className="action-card">
+              <span className="action-icon">🔍</span>
+              <span className="action-text">Buscar Talentos</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <h2 className="section-title">Mi Perfil</h2>
+          <div className="profile-card">
+            <div className="profile-info">
+              <p><strong>Nombre:</strong> {user.nombre}</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Tipo:</strong> Productora</p>
+              <p><strong>Miembro desde:</strong> {new Date(user.fecha_registro).toLocaleDateString()}</p>
+            </div>
           </div>
         </div>
       </div>
