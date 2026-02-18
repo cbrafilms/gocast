@@ -12,6 +12,9 @@ import Registro from "@/pages/Registro";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import CrearCasting from "@/pages/CrearCasting";
+import CompletarPerfil from "@/pages/CompletarPerfil";
+import DetallesCasting from "@/pages/DetallesCasting";
+import EditarPerfil from "@/pages/EditarPerfil";
 
 function App() {
   return (
@@ -29,6 +32,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/crear-casting" element={<CrearCasting />} />
+              <Route path="/completar-perfil" element={<CompletarPerfil />} />
+              <Route path="/casting/:id" element={<DetallesCasting />} />
+              <Route path="/editar-perfil" element={<EditarPerfil />} />
             </Routes>
           </Layout>
         </AuthProvider>
