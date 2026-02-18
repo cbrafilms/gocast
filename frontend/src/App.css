@@ -990,6 +990,251 @@ body {
 }
 
 /* ===========================
+   PERFIL DE TALENTO
+   =========================== */
+.perfil-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.perfil-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.perfil-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.perfil-card {
+  background: var(--bg-card);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.disponibilidad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.checkbox-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-text-inline {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.multimedia-info {
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--primary-color);
+}
+
+.info-text {
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.6;
+}
+
+.info-text-small {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.btn-submit-large {
+  width: 100%;
+  padding: 1.25rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-submit-large:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-submit-large:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   DETALLES DE CASTING
+   =========================== */
+.detalle-casting-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: var(--primary-dark);
+}
+
+.casting-detalle-card {
+  background: var(--bg-card);
+  border-radius: 1rem;
+  padding: 2.5rem;
+  box-shadow: var(--shadow);
+}
+
+.casting-detalle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.casting-detalle-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.casting-badge-activo {
+  background: var(--success-color);
+}
+
+.casting-badge-cerrado {
+  background: var(--text-secondary);
+}
+
+.casting-detalle-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 0.75rem;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.casting-detalle-section {
+  margin-bottom: 2rem;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.casting-descripcion-completa {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.aplicar-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-color);
+}
+
+/* Alertas */
+.alert-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-left: 4px solid #f59e0b;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+  border-left: 4px solid #3b82f6;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.alert-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.alert-text {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.alert-warning .btn-primary {
+  margin-top: 1rem;
+}
+
+/* ===========================
    DASHBOARD
    =========================== */
 .dashboard-container {
