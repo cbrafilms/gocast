@@ -1071,11 +1071,11 @@ async def get_shortlists_casting(
     
     # Verificar que el casting pertenece al usuario
     casting = await db.castings.find_one({"id": casting_id})
-    if not casting or casting['productor_id'] != current_user.id:
+    if not casting or casting.get('productora_id') != current_user.id:
         raise HTTPException(status_code=404, detail="Casting no encontrado")
     
     shortlists = await db.shortlists.find(
-        {"casting_id": casting_id, "productor_id": current_user.id},
+        {"casting_id": casting_id, "productora_id": current_user.id},
         {"_id": 0}
     ).to_list(50)
     
