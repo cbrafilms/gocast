@@ -1047,7 +1047,7 @@ async def crear_shortlist(
     shortlist = Shortlist(
         casting_id=shortlist_data.casting_id,
         casting_titulo=casting['titulo'],
-        productor_id=current_user.id,
+        productora_id=current_user.id,
         nombre=shortlist_data.nombre,
         talentos=talentos_info
     )
