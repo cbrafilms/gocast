@@ -60,6 +60,15 @@ const DashboardTalento = ({ user }) => {
           </button>
         </div>
 
+        {/* Alerta si no tiene perfil completo */}
+        {!perfilCompleto && (
+          <div className="alert-warning">
+            <p className="alert-title">⚠️ Completa tu perfil</p>
+            <p className="alert-text">Debes completar tu perfil para ver castings personalizados y aplicar a ellos.</p>
+            <Link to="/completar-perfil" className="btn-primary">Completar Perfil Ahora</Link>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="stats-grid">
           <div className="stat-card">
