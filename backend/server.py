@@ -1014,7 +1014,7 @@ async def crear_shortlist(
     casting = await db.castings.find_one({"id": shortlist_data.casting_id})
     if not casting:
         raise HTTPException(status_code=404, detail="Casting no encontrado")
-    if casting['productor_id'] != current_user.id:
+    if casting.get('productora_id') != current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso para este casting")
     
     # Obtener info de los talentos seleccionados
