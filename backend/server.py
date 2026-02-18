@@ -394,6 +394,240 @@ async def get_mis_castings(current_user: User = Depends(get_current_user)):
     
     return castings
 
+# Endpoint para crear/actualizar perfil de talento
+@api_router.post("/perfil-talento", response_model=PerfilTalento)
+async def crear_perfil_talento(
+    perfil_data: PerfilTalentoCreate,
+    current_user: User = Depends(get_current_user)
+):
+    # Verificar que sea talento
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden crear perfil"
+        )
+    
+    # Crear objeto Perfil
+    perfil = PerfilTalento(
+        **perfil_data.model_dump(),
+        user_id=current_user.id
+    )
+    
+    # Preparar documento para MongoDB
+    doc = perfil.model_dump()
+    doc['fecha_creacion'] = doc['fecha_creacion'].isoformat()
+    
+    try:
+        # Verificar si ya existe perfil
+        existing = await db.perfiles_talento.find_one({"user_id": current_user.id}, {"_id": 0})
+        
+        if existing:
+            # Actualizar perfil existente
+            await db.perfiles_talento.update_one(
+                {"user_id": current_user.id},
+                {"$set": doc}
+            )
+        else:
+            # Insertar nuevo perfil
+            await db.perfiles_talento.insert_one(doc)
+        
+        # Marcar usuario como perfil completo
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": {"perfil_completo": True}}
+        )
+        
+        logger.info(f"Perfil creado/actualizado para: {current_user.email}")
+        return perfil
+    except Exception as e:
+        logger.error(f"Error al crear perfil: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error al crear el perfil"
+        )
+
+# Endpoint para obtener perfil de talento
+@api_router.get("/perfil-talento", response_model=PerfilTalento)
+async def get_perfil_talento(current_user: User = Depends(get_current_user)):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden ver este perfil"
+        )
+    
+    perfil_doc = await db.perfiles_talento.find_one(
+        {"user_id": current_user.id},
+        {"_id": 0}
+    )
+    
+    if not perfil_doc:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil no encontrado. Debe completar su perfil."
+        )
+    
+    # Convertir fecha
+    if isinstance(perfil_doc['fecha_creacion'], str):
+        perfil_doc['fecha_creacion'] = datetime.fromisoformat(perfil_doc['fecha_creacion'])
+    
+    return PerfilTalento(**perfil_doc)
+
+# Endpoint para aplicar a un casting
+@api_router.post("/aplicaciones", response_model=Aplicacion)
+async def aplicar_casting(
+    aplicacion_data: AplicacionCreate,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden aplicar a castings"
+        )
+    
+    # Verificar que existe el casting
+    casting = await db.castings.find_one(
+        {"id": aplicacion_data.casting_id},
+        {"_id": 0}
+    )
+    
+    if not casting:
+        raise HTTPException(
+            status_code=404,
+            detail="Casting no encontrado"
+        )
+    
+    # Verificar que no haya aplicado ya
+    existing = await db.aplicaciones.find_one({
+        "casting_id": aplicacion_data.casting_id,
+        "talento_id": current_user.id
+    }, {"_id": 0})
+    
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya has aplicado a este casting"
+        )
+    
+    # Crear aplicación
+    aplicacion = Aplicacion(
+        casting_id=aplicacion_data.casting_id,
+        talento_id=current_user.id,
+        talento_nombre=current_user.nombre,
+        mensaje=aplicacion_data.mensaje
+    )
+    
+    doc = aplicacion.model_dump()
+    doc['fecha_aplicacion'] = doc['fecha_aplicacion'].isoformat()
+    
+    try:
+        await db.aplicaciones.insert_one(doc)
+        logger.info(f"Aplicación creada: {current_user.nombre} -> {casting['titulo']}")
+        return aplicacion
+    except Exception as e:
+        logger.error(f"Error al crear aplicación: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error al aplicar al casting"
+        )
+
+# Endpoint para obtener mis aplicaciones (talento)
+@api_router.get("/mis-aplicaciones", response_model=List[Aplicacion])
+async def get_mis_aplicaciones(current_user: User = Depends(get_current_user)):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden ver sus aplicaciones"
+        )
+    
+    aplicaciones = await db.aplicaciones.find(
+        {"talento_id": current_user.id},
+        {"_id": 0}
+    ).sort("fecha_aplicacion", -1).to_list(100)
+    
+    for app in aplicaciones:
+        if isinstance(app['fecha_aplicacion'], str):
+            app['fecha_aplicacion'] = datetime.fromisoformat(app['fecha_aplicacion'])
+    
+    return aplicaciones
+
+# Endpoint para obtener detalle de un casting específico
+@api_router.get("/castings/{casting_id}", response_model=Casting)
+async def get_casting_detalle(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    casting = await db.castings.find_one(
+        {"id": casting_id},
+        {"_id": 0}
+    )
+    
+    if not casting:
+        raise HTTPException(
+            status_code=404,
+            detail="Casting no encontrado"
+        )
+    
+    if isinstance(casting['fecha_creacion'], str):
+        casting['fecha_creacion'] = datetime.fromisoformat(casting['fecha_creacion'])
+    
+    return Casting(**casting)
+
+# Endpoint para obtener castings filtrados según perfil del talento
+@api_router.get("/castings-recomendados", response_model=List[Casting])
+async def get_castings_recomendados(current_user: User = Depends(get_current_user)):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden ver castings recomendados"
+        )
+    
+    # Obtener perfil del talento
+    perfil = await db.perfiles_talento.find_one(
+        {"user_id": current_user.id},
+        {"_id": 0}
+    )
+    
+    if not perfil:
+        # Si no tiene perfil, retornar lista vacía
+        return []
+    
+    # Construir filtro dinámico
+    filtro = {"estado": "activo"}
+    
+    # Filtrar por tipo de talento
+    if perfil.get('tipo_talento'):
+        filtro["tipo"] = perfil['tipo_talento'].lower()
+    
+    # Filtrar por género si el casting lo especifica
+    castings = await db.castings.find(filtro, {"_id": 0}).to_list(100)
+    
+    # Filtrar por edad
+    castings_filtrados = []
+    for casting in castings:
+        incluir = True
+        
+        # Filtro de género
+        if casting.get('genero') and perfil.get('sexo'):
+            if casting['genero'].lower() != 'cualquiera':
+                if casting['genero'].lower() != perfil['sexo'].lower():
+                    incluir = False
+        
+        # Filtro de edad
+        if casting.get('edad_min') and perfil.get('edad'):
+            if perfil['edad'] < casting['edad_min']:
+                incluir = False
+        
+        if casting.get('edad_max') and perfil.get('edad'):
+            if perfil['edad'] > casting['edad_max']:
+                incluir = False
+        
+        if incluir:
+            if isinstance(casting['fecha_creacion'], str):
+                casting['fecha_creacion'] = datetime.fromisoformat(casting['fecha_creacion'])
+            castings_filtrados.append(Casting(**casting))
+    
+    return castings_filtrados
+
 # Include the router in the main app
 app.include_router(api_router)
 
