@@ -78,12 +78,15 @@ const EditarPerfil = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.nombre_completo.trim()) newErrors.nombre_completo = 'El nombre es requerido';
+    if (!formData.nombre_completo?.trim()) newErrors.nombre_completo = 'El nombre es requerido';
     if (!formData.edad || formData.edad < 1) newErrors.edad = 'La edad es requerida';
-    if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
-    if (!formData.pais.trim()) newErrors.pais = 'El país es requerido';
+    if (!formData.ciudad?.trim()) newErrors.ciudad = 'La ciudad es requerida';
+    if (!formData.pais?.trim()) newErrors.pais = 'El país es requerido';
     if (!formData.altura_cm || formData.altura_cm < 1) newErrors.altura_cm = 'La altura es requerida';
-    if (!formData.descripcion_corta.trim()) newErrors.descripcion_corta = 'La descripción es requerida';
+    if (!formData.talla_pantalon?.trim()) newErrors.talla_pantalon = 'La talla de pantalón es requerida';
+    if (!formData.talla_zapatos?.trim()) newErrors.talla_zapatos = 'La talla de zapatos es requerida';
+    if (!formData.descripcion_corta?.trim()) newErrors.descripcion_corta = 'La descripción es requerida';
+    if (!formData.disponibilidad || formData.disponibilidad.length === 0) newErrors.disponibilidad = 'Selecciona al menos un día';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -131,23 +134,23 @@ const EditarPerfil = () => {
   return (
     <div className="gocast-page">
       <div className="gocast-container">
-        <div className="perfil-container">
+        <div className="perfil-container" data-testid="editar-perfil">
           <Link to="/dashboard" className="back-link">← Volver al Dashboard</Link>
           
           <div className="perfil-header">
             <h1 className="page-title">Editar Perfil de Talento</h1>
-            <p className="page-subtitle">Actualiza tu información</p>
+            <p className="page-subtitle">Actualiza tu información para mejorar tus oportunidades</p>
           </div>
 
           <form onSubmit={handleSubmit} className="perfil-form">
             {successMessage && <div className="success-message">{successMessage}</div>}
             {errors.submit && <div className="error-message">{errors.submit}</div>}
 
-            {/* Mismo formulario que CompletarPerfil */}
+            {/* Tipo de Talento */}
             <div className="perfil-card">
               <h2 className="card-title">Tipo de Talento</h2>
               <div className="form-group">
-                <select name="tipo_talento" value={formData.tipo_talento} onChange={handleChange} className="form-input">
+                <select name="tipo_talento" value={formData.tipo_talento || 'actor'} onChange={handleChange} className="form-input">
                   <option value="actor">Actor/Actriz</option>
                   <option value="modelo">Modelo</option>
                   <option value="voz">Voz en Off/Locutor</option>
@@ -159,46 +162,139 @@ const EditarPerfil = () => {
               </div>
             </div>
 
+            {/* Información Personal */}
             <div className="perfil-card">
               <h2 className="card-title">Información Personal</h2>
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">Nombre Completo *</label>
-                  <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleChange} className={`form-input ${errors.nombre_completo ? 'input-error' : ''}`} />
+                  <input type="text" name="nombre_completo" value={formData.nombre_completo || ''} onChange={handleChange} className={`form-input ${errors.nombre_completo ? 'input-error' : ''}`} placeholder="Ej: Juan Pérez" />
                   {errors.nombre_completo && <span className="form-error">{errors.nombre_completo}</span>}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Edad *</label>
-                  <input type="number" name="edad" value={formData.edad} onChange={handleChange} className={`form-input ${errors.edad ? 'input-error' : ''}`} />
+                  <input type="number" name="edad" value={formData.edad || ''} onChange={handleChange} className={`form-input ${errors.edad ? 'input-error' : ''}`} min="1" max="100" />
                   {errors.edad && <span className="form-error">{errors.edad}</span>}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Ciudad *</label>
-                  <input type="text" name="ciudad" value={formData.ciudad} onChange={handleChange} className={`form-input ${errors.ciudad ? 'input-error' : ''}`} />
+                  <input type="text" name="ciudad" value={formData.ciudad || ''} onChange={handleChange} className={`form-input ${errors.ciudad ? 'input-error' : ''}`} placeholder="Ej: Buenos Aires" />
                   {errors.ciudad && <span className="form-error">{errors.ciudad}</span>}
                 </div>
                 <div className="form-group">
                   <label className="form-label">País *</label>
-                  <input type="text" name="pais" value={formData.pais} onChange={handleChange} className={`form-input ${errors.pais ? 'input-error' : ''}`} />
+                  <input type="text" name="pais" value={formData.pais || ''} onChange={handleChange} className={`form-input ${errors.pais ? 'input-error' : ''}`} placeholder="Ej: Argentina" />
                   {errors.pais && <span className="form-error">{errors.pais}</span>}
                 </div>
               </div>
             </div>
 
+            {/* Atributos Físicos */}
             <div className="perfil-card">
-              <h2 className="card-title">Descripción</h2>
+              <h2 className="card-title">Atributos Físicos</h2>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Altura (cm) *</label>
+                  <input type="number" name="altura_cm" value={formData.altura_cm || ''} onChange={handleChange} className={`form-input ${errors.altura_cm ? 'input-error' : ''}`} min="1" max="250" />
+                  {errors.altura_cm && <span className="form-error">{errors.altura_cm}</span>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Color de Pelo *</label>
+                  <select name="color_pelo" value={formData.color_pelo || 'castaño'} onChange={handleChange} className="form-input">
+                    <option value="negro">Negro</option>
+                    <option value="castaño">Castaño</option>
+                    <option value="rubio">Rubio</option>
+                    <option value="pelirrojo">Pelirrojo</option>
+                    <option value="gris">Gris/Canoso</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Color de Ojos *</label>
+                  <select name="color_ojos" value={formData.color_ojos || 'marrones'} onChange={handleChange} className="form-input">
+                    <option value="marrones">Marrones</option>
+                    <option value="verdes">Verdes</option>
+                    <option value="azules">Azules</option>
+                    <option value="grises">Grises</option>
+                    <option value="negros">Negros</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Sexo *</label>
+                  <select name="sexo" value={formData.sexo || 'masculino'} onChange={handleChange} className="form-input">
+                    <option value="masculino">Masculino</option>
+                    <option value="femenino">Femenino</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Tallas */}
+            <div className="perfil-card">
+              <h2 className="card-title">Tallas</h2>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Talla Camisa *</label>
+                  <select name="talla_camisa" value={formData.talla_camisa || 'M'} onChange={handleChange} className="form-input">
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Talla Pantalón *</label>
+                  <input type="text" name="talla_pantalon" value={formData.talla_pantalon || ''} onChange={handleChange} className={`form-input ${errors.talla_pantalon ? 'input-error' : ''}`} placeholder="Ej: 32" />
+                  {errors.talla_pantalon && <span className="form-error">{errors.talla_pantalon}</span>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Talla Zapatos *</label>
+                  <input type="text" name="talla_zapatos" value={formData.talla_zapatos || ''} onChange={handleChange} className={`form-input ${errors.talla_zapatos ? 'input-error' : ''}`} placeholder="Ej: 42" />
+                  {errors.talla_zapatos && <span className="form-error">{errors.talla_zapatos}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Descripción */}
+            <div className="perfil-card">
+              <h2 className="card-title">Descripción y Talentos</h2>
               <div className="form-group">
                 <label className="form-label">Descripción Breve *</label>
-                <textarea name="descripcion_corta" value={formData.descripcion_corta} onChange={handleChange} className={`form-input ${errors.descripcion_corta ? 'input-error' : ''}`} rows="4" />
+                <textarea name="descripcion_corta" value={formData.descripcion_corta || ''} onChange={handleChange} className={`form-input ${errors.descripcion_corta ? 'input-error' : ''}`} rows="4" placeholder="Cuéntanos sobre ti, tu experiencia y qué te hace único..." />
                 {errors.descripcion_corta && <span className="form-error">{errors.descripcion_corta}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Talentos Especiales</label>
-                <textarea name="talentos_especiales" value={formData.talentos_especiales} onChange={handleChange} className="form-input" rows="3" />
+                <textarea name="talentos_especiales" value={formData.talentos_especiales || ''} onChange={handleChange} className="form-input" rows="3" placeholder="Habilidades especiales: canto, baile, artes marciales, idiomas, etc." />
               </div>
             </div>
 
-            <button type="submit" className="btn-submit-large" disabled={isSubmitting}>
+            {/* Disponibilidad */}
+            <div className="perfil-card">
+              <h2 className="card-title">Disponibilidad Semanal *</h2>
+              <div className="disponibilidad-grid">
+                {['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].map(dia => (
+                  <label key={dia} className="checkbox-label-inline">
+                    <input 
+                      type="checkbox" 
+                      name="disponibilidad" 
+                      value={dia} 
+                      checked={formData.disponibilidad?.includes(dia) || false} 
+                      onChange={handleChange} 
+                      className="checkbox-input" 
+                    />
+                    <span className="checkbox-text-inline">{dia.charAt(0).toUpperCase() + dia.slice(1)}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.disponibilidad && <span className="form-error">{errors.disponibilidad}</span>}
+            </div>
+
+            <button type="submit" className="btn-submit-large" disabled={isSubmitting} data-testid="btn-actualizar">
               {isSubmitting ? 'Actualizando...' : 'Actualizar Perfil'}
             </button>
           </form>
