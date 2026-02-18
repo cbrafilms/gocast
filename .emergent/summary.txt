@@ -1,0 +1,190 @@
+<analysis>original_problem_statement:
+El usuario, un desarrollador senior de HTML, CSS y PHP, quiere agregar nuevas páginas y funcionalidades a su sitio existente GOCAST.me, una plataforma de castings online.
+
+**PRODUCT REQUIREMENTS:**
+1.  **Página “Quiénes Somos”**: Una página estática () con texto descriptivo sobre la plataforma.
+2.  **Página “Preguntas Frecuentes (FAQ)”**: Una página () con una lista de preguntas y respuestas, preferiblemente con un efecto de acordeón.
+3.  **Página “Legales” y Modificación del Registro**:
+    *   Crear una página de términos legales ().
+    *   Modificar el formulario de registro para incluir un checkbox obligatorio que enlace a la página de legales, con validación tanto en frontend como en backend (PHP).
+4.  **Página “Precios / Planes”**: Una página () que detalle los modelos de precios para talentos y productoras en un formato de tarjetas o bloques.
+5.  **Requisitos posteriores (evolución del proyecto)**:
+    *   **Sistema de Perfil de Talento Completo**: Tras el registro, los talentos deben completar un perfil detallado con información personal, atributos físicos, tallas, descripción, talentos, disponibilidad y subir al menos una foto y un video.
+    *   **Sistema de Casting Avanzado**:
+        *   Las productoras deben poder crear castings con múltiples roles.
+        *   Cada rol debe tener filtros específicos (talla, color de pelo, etc.) que coincidan con los perfiles de los talentos.
+        *   Nuevos campos por rol: monto a pagar, territorios de exhibición, duración y fechas clave (límite de postulación, producción).
+        *   **Auto-Match**: Al crear un casting, el sistema debe sugerir talentos que coincidan.
+        *   **Búsqueda Manual**: Un buscador para que las productoras encuentren talentos usando todos los filtros del perfil.
+        *   **Sistema de Invitaciones**: Las productoras pueden invitar talentos a sus castings.
+    *   **Flujo del Talento**:
+        *   Los talentos solo deben ver castings que coincidan con su perfil o a los que han sido invitados.
+        *   Deben poder ver los detalles de los castings.
+        *   Deben poder aceptar o rechazar las condiciones de un casting, proporcionando una explicación si lo rechazan.
+        *   Deben poder editar su perfil después de haberlo creado.
+
+**User's preferred language**: Spanish (Español). El próximo agente DEBE comunicarse en español.
+
+**what currently exists?**
+Inicialmente se pensó que el proyecto era PHP, pero se descubrió que es una aplicación Full-Stack con React (frontend) y FastAPI (Python, backend) con una base de datos MongoDB. El agente ha implementado:
+- La estructura básica de la aplicación con 5 páginas principales: Quiénes Somos, FAQ, Legales, Precios y un Home.
+- Un sistema completo de autenticación (Registro y Login) con JWT para dos tipos de usuarios: Talento y Productora.
+- Dashboards básicos para ambos tipos de usuarios.
+- Un flujo de registro que obliga a los nuevos talentos a completar un perfil detallado antes de acceder al dashboard.
+- El backend ha sido actualizado para soportar un sistema de castings más complejo con roles, aunque el frontend aún está en desarrollo.
+
+**Last working item**:
+- **Last item agent was working on**: Implementación del sistema avanzado de castings. El agente actualizó los modelos Pydantic y los endpoints en el backend () para incluir roles múltiples por casting, campos detallados por rol (pago, tallas, etc.), y la lógica para futuras búsquedas y auto-matching. Luego, comenzó a reescribir el componente de frontend  para soportar la creación de castings con estos nuevos roles múltiples.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: both. El backend necesita pruebas con  para los nuevos endpoints de búsqueda y auto-match. El frontend requiere pruebas visuales con la  y pruebas manuales del nuevo formulario de creación de castings.
+- **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+- **Issue 1**: Error de compilación recurrente en el frontend (P0 - HIGHEST)
+- **Issue 2**: El usuario reportó problemas para registrarse (P1)
+
+**Issues Detail**:
+- **Issue 1**:
+  - **Description**: La compilación del frontend falla intermitentemente con el error  originado en .
+  - **Attempted fixes**: Reiniciar el servicio del frontend (frontend: ERROR (not running)
+frontend: started) soluciona el problema temporalmente.
+  - **Next debug checklist**: Si el error persiste, investigar la causa raíz en el plugin de Babel en lugar de solo reiniciar. Consultar al  si es necesario.
+  - **Why fix this issue and what will be achieved with the fix?**: Solucionar este problema es crítico para estabilizar el entorno de desarrollo y evitar interrupciones constantes.
+  - **Status**: IN PROGRESS (con workaround)
+  - **Is recurring issue?**: Y
+  - **Should Test frontend/backend/both after fix?**: frontend
+- **Issue 2**:
+  - **Description**: El usuario indicó que no podía registrarse ni como talento ni como productora. Aunque el agente creó credenciales de prueba y verificó el flujo, el problema inicial del usuario podría indicar un error sutil.
+  - **Attempted fixes**: El agente creó usuarios de prueba y proporcionó una guía de registro.
+  - **Next debug checklist**: Realizar una prueba exhaustiva del flujo de registro de principio a fin después de implementar las nuevas características, prestando especial atención a la consola del navegador y las peticiones de red.
+  - **Why fix this issue and what will be achieved with the fix?**: Es la funcionalidad más básica y crítica de la plataforma. Sin un registro funcional, la aplicación es inutilizable para nuevos usuarios.
+  - **Status**: USER VERIFICATION PENDING
+  - **Is recurring issue?**: N
+  - **Should Test frontend/backend/both after fix?**: both
+
+**In progress Task List**:
+- **Task 1**: Completar la implementación del sistema avanzado de castings (P0 - HIGHEST)
+
+**Task Detail**:
+- **Task 1**:
+  - **Where to resume**: En el frontend. El agente estaba a punto de reescribir el archivo  para implementar el formulario que permite agregar múltiples roles dinámicamente, cada uno con sus propios campos detallados (pago, tallas, filtros, etc.).
+  - **What will be achieved with this?**: Las productoras podrán crear castings complejos y detallados, que es la base para el sistema de matching y búsqueda de talentos.
+  - **Status**: IN PROGRESS
+  - **Should Test frontend/backend/both after fix?**: both
+  - **Blocked on something**: No.
+
+**Upcoming and Future Tasks**
+- **Frontend para Búsqueda y Matching (P0)**:
+  - Desarrollar la interfaz para que las productoras busquen talentos manualmente con filtros avanzados ().
+  - Mostrar los resultados del auto-match después de crear un casting, con la opción de invitar talentos.
+- **Sistema de Invitaciones y Aplicaciones (Lado del Talento) (P1)**:
+  - Crear la vista para que los talentos vean los detalles de un casting ().
+  - Implementar la funcionalidad para que un talento acepte o rechace una invitación/casting, con un campo de texto para la justificación.
+  - Actualizar el dashboard del talento () para mostrar castings a los que ha sido invitado.
+- **Edición de Perfil de Talento (P1)**:
+  - Crear una nueva página o modificar la existente para que los talentos puedan editar su perfil () después del registro inicial.
+- **Subida de Archivos Multimedia (P2)**:
+  - Implementar la lógica de backend y frontend para la carga de fotos y videos en el perfil del talento.
+
+**Completed work in this session**
+- **Páginas Estáticas**: Creación de los componentes base en React para Quiénes Somos, FAQ, Legales y Precios.
+- **Autenticación**: Implementación completa del registro, login y gestión de sesión con JWT para usuarios Talento y Productora.
+- **Perfil de Talento**: Creado el flujo de registro forzado y el formulario () para que los nuevos talentos llenen sus datos.
+- **Dashboards**: Creación de dashboards diferenciados para talentos y productoras.
+- **Backend para Castings Avanzados**: Actualización de la  con nuevos modelos de datos (Roles, Invitaciones) y endpoints para soportar la nueva lógica de castings.
+
+**Earlier issues found/mentioned but not fixed**
+- **Issue 1**: Los talentos no pueden editar su perfil una vez creado. El flujo actual solo contempla la creación inicial.
+  - **Debug checklist**: Crear un nuevo endpoint  y una nueva página de frontend  para manejar la actualización de datos.
+  - **Why to solve this issue and what will be achieved with this?**: Permite a los talentos mantener su información actualizada, lo cual es vital para el matching.
+  - **Should Test frontend/backend/both after fix**: both
+  - **Is recurring issue?**: N
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Frontend**: React, React Router, Tailwind CSS, Axios, React Context API.
+- **Backend**: FastAPI (Python), Pydantic (modelos de datos), Motor (cliente asíncrono de MongoDB), PyJWT (autenticación).
+- **Database**: MongoDB.
+
+**key DB schema**
+- **users**: 
+- **talent_profiles**: 
+- **castings**: 
+- **Role**: 
+- **applications**: 
+- **invitations**: 
+
+**changes in tech stack**
+- Se cambió la pila tecnológica de la solicitud original (PHP) a React + FastAPI, con la aprobación del usuario.
+
+**All files of reference**
+- : Contiene toda la lógica del backend. Ha sido modificado extensamente para añadir autenticación, perfiles y el nuevo sistema de castings.
+- : El archivo que se está reescribiendo para soportar la creación de castings con múltiples roles.
+- : Página para que los talentos completen su perfil.
+- : Gestiona el estado de autenticación del usuario.
+- : Define todas las rutas de la aplicación.
+- : Estilos personalizados para los nuevos componentes.
+
+**Areas that need refactoring**
+- El archivo  está creciendo demasiado. Sería beneficioso refactorizarlo separando los routers, modelos y lógica de base de datos en módulos distintos para mejorar la mantenibilidad.
+- Las llamadas a la API en el frontend están dispersas en los componentes. Se recomienda centralizarlas en un servicio dedicado (ej. ).
+
+**key api endpoints**
+- : Registrar un nuevo usuario.
+- : Iniciar sesión y obtener un token JWT.
+- : Crear o actualizar el perfil de un talento (protegido).
+- : Obtener el perfil del talento actual (protegido).
+- : Crear un nuevo casting con roles (protegido).
+- : Obtener castings recomendados para un talento (protegido).
+- : Buscar talentos según criterios (protegido).
+- : Enviar una invitación a un talento (protegido).
+
+**Critical Info for New Agent**
+- El alcance del proyecto ha crecido de unas pocas páginas estáticas a una aplicación web completa y compleja.
+- Existe un error de compilación recurrente en el frontend () que se soluciona temporalmente reiniciando el servidor de desarrollo. Ten esto en cuenta si la interfaz de usuario aparece en blanco o con errores de compilación.
+- El usuario es muy claro y detallado en sus requisitos; sigue sus instrucciones cuidadosamente.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (pending)**: Solicitó un sistema de casting avanzado con múltiples roles, filtros detallados, auto-match, búsqueda manual, invitaciones y campos adicionales (pago, territorios, fechas).
+2.  **User (pending)**: Confirmó que el agente debía continuar con la implementación del frontend para el sistema de casting avanzado.
+3.  **User (pending)**: Pidió al agente que continuara con todos los pasos recomendados para completar el flujo de la aplicación.
+4.  **User (pending)**: Informó que no podía registrarse ni como talento ni como productora. Este es un punto crítico a resolver.
+5.  **User**: Preguntó cómo podría desplegar la aplicación en su hosting de Hostinger.
+6.  **User**: Pidió continuar con la implementación.
+7.  **User**: Pidió continuar con la implementación.
+8.  **User (pending)**: Proporcionó una lista detallada de problemas y requisitos:
+    -   Los talentos no pueden editar su perfil.
+    -   Los talentos no pueden ver los detalles de los castings.
+    -   El listado de castings para talentos no está filtrado; debería mostrar solo castings compatibles o invitaciones.
+    -   Los talentos deben poder aceptar/rechazar castings.
+    -   Proporcionó una lista exhaustiva de todos los campos necesarios para el perfil de un talento.
+9.  **User (pending)**: Reiteró que no puede registrarse y necesita usuarios de prueba.
+
+**Project Health Check:**
+- **Broken**: El proceso de compilación del frontend es inestable debido al error recurrente de Babel. El flujo de registro fue reportado como no funcional por el usuario.
+- **Mocked**: N/A
+
+**3rd Party Integrations**
+- Ninguna.
+
+**Testing status**
+- **Testing agent used after significant changes**: NO
+- **Troubleshoot agent used after agent stuck in loop**: NO
+- **Test files created**: Ninguno
+- **Known regressions**: La inestabilidad del proceso de build del frontend.
+
+**Credentials to test flow:**
+- **Talento de prueba**:
+  - Email: 
+  - Contraseña: 
+- **Productora de prueba**:
+  - Email: 
+  - Contraseña: 
+
+**What agent forgot to execute**
+- No se implementó la funcionalidad para que un talento **edite su perfil** después de la creación inicial.
+- No se implementó la funcionalidad para que un talento **vea los detalles de un casting y lo acepte/rechace**.
+- Falta la lógica de backend para manejar la **subida de archivos** (fotos y videos) para los perfiles de talento.</analysis>
