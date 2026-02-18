@@ -223,7 +223,7 @@ class Shortlist(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     casting_id: str
     casting_titulo: str
-    productor_id: str
+    productora_id: str
     nombre: str
     url_publica: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     talentos: List[dict] = []
