@@ -667,6 +667,243 @@ async def get_castings_recomendados(current_user: User = Depends(get_current_use
     
     return castings_filtrados
 
+# Endpoint para buscar talentos con filtros
+@api_router.get("/buscar-talentos")
+async def buscar_talentos(
+    current_user: User = Depends(get_current_user),
+    tipo_talento: Optional[str] = None,
+    sexo: Optional[str] = None,
+    edad_min: Optional[int] = None,
+    edad_max: Optional[int] = None,
+    altura_min: Optional[int] = None,
+    altura_max: Optional[int] = None,
+    color_pelo: Optional[str] = None,
+    color_ojos: Optional[str] = None,
+    ciudad: Optional[str] = None,
+    pais: Optional[str] = None
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden buscar talentos"
+        )
+    
+    # Construir filtro dinámico
+    filtro = {}
+    
+    if tipo_talento:
+        filtro['tipo_talento'] = tipo_talento
+    if sexo:
+        filtro['sexo'] = sexo
+    if color_pelo:
+        filtro['color_pelo'] = color_pelo
+    if color_ojos:
+        filtro['color_ojos'] = color_ojos
+    if ciudad:
+        filtro['ciudad'] = {"$regex": ciudad, "$options": "i"}
+    if pais:
+        filtro['pais'] = {"$regex": pais, "$options": "i"}
+    
+    # Obtener perfiles
+    perfiles = await db.perfiles_talento.find(filtro, {"_id": 0}).to_list(100)
+    
+    # Filtrar por edad y altura si se especifica
+    resultados = []
+    for perfil in perfiles:
+        incluir = True
+        
+        if edad_min and perfil.get('edad', 0) < edad_min:
+            incluir = False
+        if edad_max and perfil.get('edad', 999) > edad_max:
+            incluir = False
+        if altura_min and perfil.get('altura_cm', 0) < altura_min:
+            incluir = False
+        if altura_max and perfil.get('altura_cm', 999) > altura_max:
+            incluir = False
+        
+        if incluir:
+            # Obtener info del usuario
+            user = await db.users.find_one({"id": perfil['user_id']}, {"_id": 0})
+            if user:
+                perfil['email'] = user['email']
+                resultados.append(perfil)
+    
+    return resultados
+
+# Endpoint para auto-match (encontrar talentos que coincidan con un rol)
+@api_router.post("/auto-match")
+async def auto_match(
+    rol: RolCasting,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden usar auto-match"
+        )
+    
+    # Construir filtro basado en el rol
+    filtro = {}
+    
+    if rol.tipo_talento:
+        filtro['tipo_talento'] = rol.tipo_talento
+    if rol.sexo:
+        filtro['sexo'] = rol.sexo
+    if rol.color_pelo:
+        filtro['color_pelo'] = rol.color_pelo
+    if rol.color_ojos:
+        filtro['color_ojos'] = rol.color_ojos
+    if rol.talla_camisa:
+        filtro['talla_camisa'] = rol.talla_camisa
+    
+    # Buscar perfiles que coincidan
+    perfiles = await db.perfiles_talento.find(filtro, {"_id": 0}).to_list(100)
+    
+    # Filtrar por rangos
+    matches = []
+    for perfil in perfiles:
+        incluir = True
+        
+        # Filtro de edad
+        if rol.edad_min and perfil.get('edad', 0) < rol.edad_min:
+            incluir = False
+        if rol.edad_max and perfil.get('edad', 999) > rol.edad_max:
+            incluir = False
+        
+        # Filtro de altura
+        if rol.altura_min and perfil.get('altura_cm', 0) < rol.altura_min:
+            incluir = False
+        if rol.altura_max and perfil.get('altura_cm', 999) > rol.altura_max:
+            incluir = False
+        
+        if incluir:
+            # Agregar info del usuario
+            user = await db.users.find_one({"id": perfil['user_id']}, {"_id": 0})
+            if user:
+                perfil['email'] = user['email']
+                perfil['user_nombre'] = user['nombre']
+                matches.append(perfil)
+    
+    return {
+        "total_matches": len(matches),
+        "matches": matches
+    }
+
+# Endpoint para crear invitación
+@api_router.post("/invitaciones", response_model=Invitacion)
+async def crear_invitacion(
+    invitacion_data: InvitacionCreate,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden enviar invitaciones"
+        )
+    
+    # Verificar que existe el casting
+    casting = await db.castings.find_one({"id": invitacion_data.casting_id}, {"_id": 0})
+    if not casting:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+    
+    # Verificar que no haya invitado ya
+    existing = await db.invitaciones.find_one({
+        "casting_id": invitacion_data.casting_id,
+        "rol_nombre": invitacion_data.rol_nombre,
+        "talento_id": invitacion_data.talento_id
+    }, {"_id": 0})
+    
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya has invitado a este talento para este rol"
+        )
+    
+    # Obtener info del talento
+    talento_user = await db.users.find_one({"id": invitacion_data.talento_id}, {"_id": 0})
+    if not talento_user:
+        raise HTTPException(status_code=404, detail="Talento no encontrado")
+    
+    # Crear invitación
+    invitacion = Invitacion(
+        casting_id=invitacion_data.casting_id,
+        casting_titulo=casting['titulo'],
+        rol_nombre=invitacion_data.rol_nombre,
+        talento_id=invitacion_data.talento_id,
+        talento_nombre=talento_user['nombre'],
+        productora_id=current_user.id,
+        productora_nombre=current_user.nombre,
+        mensaje=invitacion_data.mensaje
+    )
+    
+    doc = invitacion.model_dump()
+    doc['fecha_invitacion'] = doc['fecha_invitacion'].isoformat()
+    
+    try:
+        await db.invitaciones.insert_one(doc)
+        logger.info(f"Invitación creada: {casting['titulo']} -> {talento_user['nombre']}")
+        return invitacion
+    except Exception as e:
+        logger.error(f"Error al crear invitación: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error al crear invitación")
+
+# Endpoint para obtener mis invitaciones (talento)
+@api_router.get("/mis-invitaciones", response_model=List[Invitacion])
+async def get_mis_invitaciones(current_user: User = Depends(get_current_user)):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden ver sus invitaciones"
+        )
+    
+    invitaciones = await db.invitaciones.find(
+        {"talento_id": current_user.id},
+        {"_id": 0}
+    ).sort("fecha_invitacion", -1).to_list(100)
+    
+    for inv in invitaciones:
+        if isinstance(inv['fecha_invitacion'], str):
+            inv['fecha_invitacion'] = datetime.fromisoformat(inv['fecha_invitacion'])
+    
+    return invitaciones
+
+# Endpoint para responder a una invitación
+@api_router.put("/invitaciones/{invitacion_id}/responder")
+async def responder_invitacion(
+    invitacion_id: str,
+    respuesta: str,  # "aceptada" o "rechazada"
+    mensaje_respuesta: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo los talentos pueden responder invitaciones"
+        )
+    
+    if respuesta not in ["aceptada", "rechazada"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Respuesta debe ser 'aceptada' o 'rechazada'"
+        )
+    
+    # Actualizar invitación
+    result = await db.invitaciones.update_one(
+        {"id": invitacion_id, "talento_id": current_user.id},
+        {"$set": {
+            "estado": respuesta,
+            "respuesta_talento": mensaje_respuesta
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Invitación no encontrada"
+        )
+    
+    return {"message": f"Invitación {respuesta} exitosamente"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
