@@ -1108,11 +1108,11 @@ async def preseleccionar_aplicacion(
     # Obtener la aplicacion
     aplicacion = await db.aplicaciones.find_one({"id": aplicacion_id})
     if not aplicacion:
-        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+        raise HTTPException(status_code=404, detail="Aplicacion no encontrada")
     
     # Verificar que el casting pertenece al usuario
     casting = await db.castings.find_one({"id": aplicacion['casting_id']})
-    if not casting or casting['productor_id'] != current_user.id:
+    if not casting or casting.get('productora_id') != current_user.id:
         raise HTTPException(status_code=403, detail="No autorizado")
     
     # Actualizar el estado de la aplicacion
