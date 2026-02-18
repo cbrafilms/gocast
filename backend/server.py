@@ -182,6 +182,29 @@ class Aplicacion(BaseModel):
     respuesta: Optional[str] = None
     fecha_aplicacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Invitación Models
+class InvitacionCreate(BaseModel):
+    casting_id: str
+    rol_nombre: str  # A qué rol específico se invita
+    talento_id: str
+    mensaje: Optional[str] = None
+
+class Invitacion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    casting_id: str
+    casting_titulo: str
+    rol_nombre: str
+    talento_id: str
+    talento_nombre: str
+    productora_id: str
+    productora_nombre: str
+    estado: str = "pendiente"  # pendiente, aceptada, rechazada
+    mensaje: Optional[str] = None
+    respuesta_talento: Optional[str] = None
+    fecha_invitacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
