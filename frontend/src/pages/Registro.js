@@ -82,7 +82,7 @@ const Registro = () => {
       });
 
       if (response.data) {
-        setSuccessMessage('¡Registro exitoso! Bienvenido a GOCAST.me');
+        setSuccessMessage('¡Registro exitoso! Por favor inicia sesión para continuar.');
         // Limpiar formulario
         setFormData({
           nombre: '',
@@ -92,10 +92,10 @@ const Registro = () => {
           aceptaTerminos: false
         });
         
-        // Redirigir después de 2 segundos
+        // Redirigir a login después de 3 segundos
         setTimeout(() => {
-          navigate('/');
-        }, 2000);
+          navigate('/login');
+        }, 3000);
       }
     } catch (error) {
       console.error('Error al registrar:', error);
