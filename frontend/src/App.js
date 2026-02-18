@@ -15,7 +15,9 @@ import CrearCasting from "@/pages/CrearCasting";
 import CompletarPerfil from "@/pages/CompletarPerfil";
 import DetallesCasting from "@/pages/DetallesCasting";
 import EditarPerfil from "@/pages/EditarPerfil";
-import BuscarTalentos from "@/pages/BuscarTalentos";
+
+// Lazy load BuscarTalentos to avoid babel plugin issues
+const BuscarTalentos = React.lazy(() => import("@/pages/BuscarTalentos"));
 
 function App() {
   return (
@@ -23,21 +25,23 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Layout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/quienes-somos" element={<QuienesSomos />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/legales" element={<Legales />} />
-              <Route path="/precios" element={<Precios />} />
-              <Route path="/registro" element={<Registro />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/crear-casting" element={<CrearCasting />} />
-              <Route path="/completar-perfil" element={<CompletarPerfil />} />
-              <Route path="/casting/:id" element={<DetallesCasting />} />
-              <Route path="/editar-perfil" element={<EditarPerfil />} />
-              <Route path="/buscar-talentos" element={<BuscarTalentos />} />
-            </Routes>
+            <React.Suspense fallback={<div className="gocast-page"><div className="gocast-container"><p>Cargando...</p></div></div>}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/quienes-somos" element={<QuienesSomos />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/legales" element={<Legales />} />
+                <Route path="/precios" element={<Precios />} />
+                <Route path="/registro" element={<Registro />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/crear-casting" element={<CrearCasting />} />
+                <Route path="/completar-perfil" element={<CompletarPerfil />} />
+                <Route path="/casting/:id" element={<DetallesCasting />} />
+                <Route path="/editar-perfil" element={<EditarPerfil />} />
+                <Route path="/buscar-talentos" element={<BuscarTalentos />} />
+              </Routes>
+            </React.Suspense>
           </Layout>
         </AuthProvider>
       </BrowserRouter>
