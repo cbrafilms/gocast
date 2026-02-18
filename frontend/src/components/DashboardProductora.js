@@ -121,7 +121,10 @@ const DashboardProductora = ({ user }) => {
                   {casting.roles && (
                     <p className="casting-roles">{casting.roles.length} rol(es)</p>
                   )}
-                  <Link to={`/casting/${casting.id}`} className="btn-primary-small">Ver Detalles</Link>
+                  <div className="casting-card-actions">
+                    <Link to={`/casting/${casting.id}`} className="btn-secondary-small">Ver</Link>
+                    <Link to={`/gestionar-casting/${casting.id}`} className="btn-primary-small">Gestionar</Link>
+                  </div>
                 </div>
               ))}
             </div>
