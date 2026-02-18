@@ -10,9 +10,11 @@ const DashboardProductora = ({ user }) => {
   const { logout, token } = useAuth();
   const [castings, setCastings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aplicaciones, setAplicaciones] = useState([]);
 
   useEffect(() => {
     fetchMisCastings();
+    fetchAplicaciones();
   }, []);
 
   const fetchMisCastings = async () => {
