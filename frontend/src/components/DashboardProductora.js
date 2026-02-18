@@ -97,28 +97,25 @@ const DashboardProductora = ({ user }) => {
             <p>Cargando castings...</p>
           ) : castings.length === 0 ? (
             <div className="empty-state">
-              <p className="empty-icon">🎬</p>
-              <p className="empty-title">Aún no has creado castings</p>
-              <p className="empty-text">Crea tu primer casting y comienza a recibir aplicaciones de talentos.</p>
-              <Link to="/crear-casting" className="btn-primary">Crear Mi Primer Casting</Link>
+              <p className="empty-icon">📋</p>
+              <p className="empty-title">No tienes castings aun</p>
+              <p className="empty-text">Crea tu primer casting para comenzar a recibir aplicaciones de talentos.</p>
+              <Link to="/crear-casting" className="btn-primary">Crear Primer Casting</Link>
             </div>
           ) : (
             <div className="castings-grid">
               {castings.map((casting) => (
                 <div key={casting.id} className="casting-card" data-testid="casting-card">
-                  <div className="casting-badge" data-status={casting.estado}>
-                    {casting.estado}
-                  </div>
                   <h3 className="casting-title">{casting.titulo}</h3>
-                  <p className="casting-description">{casting.descripcion}</p>
+                  <p className="casting-description">{casting.descripcion?.substring(0, 100)}...</p>
                   <div className="casting-meta">
-                    <span className="casting-type">{casting.tipo}</span>
+                    <span className={`casting-status status-${casting.estado}`}>{casting.estado}</span>
                     <span className="casting-date">{new Date(casting.fecha_creacion).toLocaleDateString()}</span>
                   </div>
-                  <div className="casting-actions">
-                    <button className="btn-primary-small">Ver Aplicaciones (0)</button>
-                    <button className="btn-secondary-small">Editar</button>
-                  </div>
+                  {casting.roles && (
+                    <p className="casting-roles">{casting.roles.length} rol(es)</p>
+                  )}
+                  <Link to={`/casting/${casting.id}`} className="btn-primary-small">Ver Detalles</Link>
                 </div>
               ))}
             </div>
