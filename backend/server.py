@@ -64,6 +64,7 @@ class User(BaseModel):
     tipo_usuario: str
     fecha_registro: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     activo: bool = True
+    perfil_completo: bool = False
 
 # Login Model
 class UserLogin(BaseModel):
