@@ -15,13 +15,16 @@ const DashboardTalento = ({ user }) => {
   const [perfilCompleto, setPerfilCompleto] = useState(false);
 
   useEffect(() => {
-    checkPerfil();
-    fetchCastings();
-    fetchInvitaciones();
-    fetchAplicaciones();
-  }, []);
+    if (token) {
+      checkPerfil();
+      fetchCastings();
+      fetchInvitaciones();
+      fetchAplicaciones();
+    }
+  }, [token]);
 
   const checkPerfil = async () => {
+    if (!token) return;
     try {
       await axios.get(`${API}/perfil-talento`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -33,6 +36,7 @@ const DashboardTalento = ({ user }) => {
   };
 
   const fetchCastings = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API}/castings-recomendados`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -46,6 +50,7 @@ const DashboardTalento = ({ user }) => {
   };
 
   const fetchInvitaciones = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API}/mis-invitaciones`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -57,6 +62,7 @@ const DashboardTalento = ({ user }) => {
   };
 
   const fetchAplicaciones = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API}/mis-aplicaciones`, {
         headers: { Authorization: `Bearer ${token}` }
