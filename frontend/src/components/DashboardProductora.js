@@ -13,15 +13,19 @@ const DashboardProductora = ({ user }) => {
   const [aplicaciones, setAplicaciones] = useState([]);
 
   useEffect(() => {
-    fetchMisCastings();
-    fetchAplicaciones();
-  }, []);
+    if (token) {
+      fetchMisCastings();
+      fetchAplicaciones();
+    }
+  }, [token]);
 
   const fetchMisCastings = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API}/mis-castings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Castings cargados:', response.data);
       setCastings(response.data);
     } catch (error) {
       console.error('Error al cargar castings:', error);
@@ -31,10 +35,12 @@ const DashboardProductora = ({ user }) => {
   };
 
   const fetchAplicaciones = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API}/aplicaciones-recibidas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Aplicaciones cargadas:', response.data);
       setAplicaciones(response.data);
     } catch (error) {
       console.error('Error al cargar aplicaciones:', error);
