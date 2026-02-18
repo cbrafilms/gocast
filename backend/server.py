@@ -733,6 +733,9 @@ async def buscar_talentos(
     altura_max: Optional[int] = None,
     color_pelo: Optional[str] = None,
     color_ojos: Optional[str] = None,
+    talla_camisa: Optional[str] = None,
+    talla_pantalon: Optional[str] = None,
+    talla_zapatos: Optional[str] = None,
     ciudad: Optional[str] = None,
     pais: Optional[str] = None
 ):
@@ -742,7 +745,7 @@ async def buscar_talentos(
             detail="Solo las productoras pueden buscar talentos"
         )
     
-    # Construir filtro dinámico
+    # Construir filtro dinamico
     filtro = {}
     
     if tipo_talento:
@@ -753,6 +756,12 @@ async def buscar_talentos(
         filtro['color_pelo'] = color_pelo
     if color_ojos:
         filtro['color_ojos'] = color_ojos
+    if talla_camisa:
+        filtro['talla_camisa'] = talla_camisa
+    if talla_pantalon:
+        filtro['talla_pantalon'] = talla_pantalon
+    if talla_zapatos:
+        filtro['talla_zapatos'] = talla_zapatos
     if ciudad:
         filtro['ciudad'] = {"$regex": ciudad, "$options": "i"}
     if pais:
@@ -809,12 +818,16 @@ async def auto_match(
         filtro['color_ojos'] = rol.color_ojos
     if rol.talla_camisa:
         filtro['talla_camisa'] = rol.talla_camisa
+    if rol.talla_pantalon:
+        filtro['talla_pantalon'] = rol.talla_pantalon
+    if rol.talla_zapatos:
+        filtro['talla_zapatos'] = rol.talla_zapatos
     
     # Buscar perfiles que coincidan
     perfiles = await db.perfiles_talento.find(filtro, {"_id": 0}).to_list(100)
     
     # Filtrar por rangos
-    matches = []
+    talentos = []
     for perfil in perfiles:
         incluir = True
         
@@ -836,11 +849,11 @@ async def auto_match(
             if user:
                 perfil['email'] = user['email']
                 perfil['user_nombre'] = user['nombre']
-                matches.append(perfil)
+                talentos.append(perfil)
     
     return {
-        "total_matches": len(matches),
-        "matches": matches
+        "total_matches": len(talentos),
+        "talentos": talentos
     }
 
 # Endpoint para crear invitación
