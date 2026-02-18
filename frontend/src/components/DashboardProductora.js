@@ -46,6 +46,8 @@ const DashboardProductora = ({ user }) => {
     window.location.href = '/';
   };
 
+  const aplicacionesPendientes = aplicaciones.filter(a => a.estado === 'pendiente');
+
   return (
     <div className="gocast-container">
       <div className="dashboard-container">
