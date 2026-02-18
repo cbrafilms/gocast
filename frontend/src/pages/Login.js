@@ -50,7 +50,12 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        navigate('/dashboard');
+        // Si es talento y no tiene perfil completo, redirigir a completar perfil
+        if (result.user && result.user.tipo_usuario === 'talento' && !result.user.perfil_completo) {
+          navigate('/completar-perfil');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setErrors({ submit: result.error });
       }
