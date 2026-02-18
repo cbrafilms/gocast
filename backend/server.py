@@ -1086,7 +1086,7 @@ async def get_shortlists_casting(
 async def ver_shortlist_publico(url_publica: str):
     shortlist = await db.shortlists.find_one(
         {"url_publica": url_publica, "estado": "activo"},
-        {"_id": 0, "productor_id": 0}
+        {"_id": 0, "productora_id": 0}
     )
     
     if not shortlist:
