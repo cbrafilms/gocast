@@ -11,6 +11,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import hashlib
+import secrets
 import jwt
 
 
@@ -307,6 +308,20 @@ class CastingParticipante(BaseModel):
     is_selected: bool = False
     is_backup: bool = False
     fecha_actualizacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ShareTokenCreate(BaseModel):
+    expires_hours: int = 72
+
+
+class ClientRoleSelection(BaseModel):
+    rol_nombre: str
+    selected_talento_id: str
+    backup_talento_id: str
+
+
+class ClientSelectionPayload(BaseModel):
+    selections: List[ClientRoleSelection]
 
 # Helper Functions
 def create_access_token(data: dict):
@@ -1217,6 +1232,137 @@ async def update_participante_flags(
     )
 
     return {"message": "Participante actualizado"}
+
+
+# ===== ENDPOINTS CLIENTE / SHARE TOKEN =====
+
+@api_router.post("/castings/{casting_id}/share-token")
+async def create_share_token(
+    casting_id: str,
+    payload: ShareTokenCreate,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting or casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    raw_token = secrets.token_urlsafe(24)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=max(1, min(payload.expires_hours, 720)))
+
+    await db.share_tokens.insert_one({
+        "id": str(uuid.uuid4()),
+        "casting_id": casting_id,
+        "token_hash": token_hash,
+        "created_by": current_user.id,
+        "expires_at": expires_at.isoformat(),
+        "revoked": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    return {
+        "token": raw_token,
+        "share_url": f"/cliente/casting/{raw_token}",
+        "expires_at": expires_at
+    }
+
+
+@api_router.get("/cliente/casting/{token}")
+async def get_client_casting_view(token: str):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    share = await db.share_tokens.find_one({"token_hash": token_hash, "revoked": False}, {"_id": 0})
+    if not share:
+        raise HTTPException(status_code=404, detail="Token inválido")
+
+    expires_at = share.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at_dt = datetime.fromisoformat(expires_at)
+    else:
+        expires_at_dt = expires_at
+    if expires_at_dt < datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="Token expirado")
+
+    casting = await db.castings.find_one({"id": share.get("casting_id")}, {"_id": 0})
+    if not casting:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    participantes = await db.casting_participantes.find(
+        {"casting_id": share.get("casting_id"), "estado": "aceptado"},
+        {"_id": 0}
+    ).to_list(300)
+
+    roles = {}
+    for p in participantes:
+        roles.setdefault(p.get("rol_nombre", "General"), []).append(p)
+
+    return {
+        "casting_id": casting.get("id"),
+        "casting_titulo": casting.get("titulo"),
+        "roles": [{"rol_nombre": k, "talentos": v} for k, v in roles.items()]
+    }
+
+
+@api_router.post("/cliente/casting/{token}/seleccion")
+async def save_client_selection(token: str, payload: ClientSelectionPayload):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    share = await db.share_tokens.find_one({"token_hash": token_hash, "revoked": False}, {"_id": 0})
+    if not share:
+        raise HTTPException(status_code=404, detail="Token inválido")
+
+    casting_id = share.get("casting_id")
+
+    # Validación: 1 titular + 1 backup por rol y no repetidos
+    for sel in payload.selections:
+        if sel.selected_talento_id == sel.backup_talento_id:
+            raise HTTPException(status_code=400, detail=f"Rol {sel.rol_nombre}: titular y backup no pueden ser el mismo talento")
+
+        selected_exists = await db.casting_participantes.find_one({
+            "casting_id": casting_id,
+            "rol_nombre": sel.rol_nombre,
+            "talento_id": sel.selected_talento_id,
+            "estado": "aceptado"
+        })
+        backup_exists = await db.casting_participantes.find_one({
+            "casting_id": casting_id,
+            "rol_nombre": sel.rol_nombre,
+            "talento_id": sel.backup_talento_id,
+            "estado": "aceptado"
+        })
+
+        if not selected_exists or not backup_exists:
+            raise HTTPException(status_code=400, detail=f"Rol {sel.rol_nombre}: selección inválida")
+
+    # Reset flags por rol y aplicar nueva selección
+    for sel in payload.selections:
+        await db.casting_participantes.update_many(
+            {"casting_id": casting_id, "rol_nombre": sel.rol_nombre},
+            {"$set": {"is_selected": False, "is_backup": False, "fecha_actualizacion": datetime.now(timezone.utc).isoformat()}}
+        )
+
+        await db.casting_participantes.update_one(
+            {"casting_id": casting_id, "rol_nombre": sel.rol_nombre, "talento_id": sel.selected_talento_id},
+            {"$set": {"is_selected": True, "fecha_actualizacion": datetime.now(timezone.utc).isoformat()}}
+        )
+        await db.casting_participantes.update_one(
+            {"casting_id": casting_id, "rol_nombre": sel.rol_nombre, "talento_id": sel.backup_talento_id},
+            {"$set": {"is_backup": True, "fecha_actualizacion": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    await db.casting_client_selections.update_one(
+        {"casting_id": casting_id, "token_hash": token_hash},
+        {"$set": {
+            "casting_id": casting_id,
+            "token_hash": token_hash,
+            "selections": [s.model_dump() for s in payload.selections],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+
+    return {"message": "Selección del cliente guardada"}
 
 
 # ===== ENDPOINTS DE SHORTLIST =====

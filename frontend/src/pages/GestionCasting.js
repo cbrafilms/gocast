@@ -17,6 +17,7 @@ const GestionCasting = () => {
   const [shortlists, setShortlists] = useState([]);
   const [sugeridosPorRol, setSugeridosPorRol] = useState([]);
   const [participantes, setParticipantes] = useState([]);
+  const [shareUrlCliente, setShareUrlCliente] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('aplicaciones');
   const [showTalentModal, setShowTalentModal] = useState(false);
@@ -208,6 +209,23 @@ const GestionCasting = () => {
       fetchData();
     } catch (error) {
       setErrorMessage(error.response?.data?.detail || 'Error al actualizar participante');
+    }
+  };
+
+  const generarLinkCliente = async () => {
+    try {
+      const response = await axios.post(`${API}/castings/${id}/share-token`, {
+        expires_hours: 72
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const fullUrl = `${window.location.origin}${response.data.share_url}`;
+      setShareUrlCliente(fullUrl);
+      setSuccessMessage('Link privado generado');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al generar link privado');
     }
   };
 
@@ -470,7 +488,21 @@ const GestionCasting = () => {
             {/* Participantes */}
             {activeTab === 'participantes' && (
               <div className="shortlists-section">
-                <h2 className="section-title">Participantes del casting</h2>
+                <div className="section-header">
+                  <h2 className="section-title">Participantes del casting</h2>
+                  <button className="btn-primary" onClick={generarLinkCliente}>Generar link privado cliente</button>
+                </div>
+
+                {shareUrlCliente && (
+                  <div className="shortlist-card" style={{ marginBottom: '12px' }}>
+                    <div className="shortlist-info">
+                      <h3>Link privado activo</h3>
+                      <p style={{ wordBreak: 'break-all' }}>{shareUrlCliente}</p>
+                    </div>
+                    <button className="btn-copy" onClick={() => navigator.clipboard.writeText(shareUrlCliente)}>Copiar URL</button>
+                  </div>
+                )}
+
                 {participantes.length === 0 ? (
                   <div className="empty-state">
                     <p className="empty-icon">👥</p>
