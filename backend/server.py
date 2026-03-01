@@ -36,6 +36,68 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días
 security = HTTPBearer()
 
 
+def _normalized_text(value: Optional[str]) -> str:
+    if value is None:
+        return ""
+    return str(value).strip().lower()
+
+
+def _strict_role_match(perfil: dict, rol: dict) -> bool:
+    """Strict matching: if a filter is defined in role, talent must satisfy it.
+    Missing talent value for a required filter means no match.
+    """
+    # Exact/enum filters
+    exact_fields = [
+        "tipo_talento", "color_pelo", "color_ojos",
+        "talla_camisa", "talla_pantalon", "talla_zapatos"
+    ]
+
+    for field in exact_fields:
+        expected = rol.get(field)
+        if expected is None or expected == "":
+            continue
+        current = perfil.get(field)
+        if current is None or current == "":
+            return False
+        if _normalized_text(current) != _normalized_text(expected):
+            return False
+
+    # Sexo allows "cualquiera"
+    sexo_expected = rol.get("sexo")
+    if sexo_expected not in (None, ""):
+        if _normalized_text(sexo_expected) != "cualquiera":
+            sexo_current = perfil.get("sexo")
+            if sexo_current in (None, ""):
+                return False
+            if _normalized_text(sexo_current) != _normalized_text(sexo_expected):
+                return False
+
+    # Ranges
+    range_rules = [
+        ("edad", "edad_min", "edad_max"),
+        ("altura_cm", "altura_min", "altura_max"),
+    ]
+
+    for profile_field, min_field, max_field in range_rules:
+        value = perfil.get(profile_field)
+        min_value = rol.get(min_field)
+        max_value = rol.get(max_field)
+
+        if min_value not in (None, ""):
+            if value in (None, ""):
+                return False
+            if value < min_value:
+                return False
+
+        if max_value not in (None, ""):
+            if value in (None, ""):
+                return False
+            if value > max_value:
+                return False
+
+    return True
+
+
 # Define Models
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
@@ -703,39 +765,9 @@ async def get_castings_recomendados(current_user: User = Depends(get_current_use
     for casting in castings:
         tiene_rol_compatible = False
         
-        # Revisar cada rol del casting
+        # Revisar cada rol del casting (matching estricto)
         for rol in casting.get('roles', []):
-            compatible = True
-            
-            # Filtro de tipo de talento
-            if rol.get('tipo_talento') and perfil.get('tipo_talento'):
-                if rol['tipo_talento'].lower() != perfil['tipo_talento'].lower():
-                    compatible = False
-            
-            # Filtro de género
-            if rol.get('sexo') and perfil.get('sexo'):
-                if rol['sexo'].lower() != 'cualquiera' and rol['sexo'].lower() != perfil['sexo'].lower():
-                    compatible = False
-            
-            # Filtro de edad
-            if rol.get('edad_min') and perfil.get('edad'):
-                if perfil['edad'] < rol['edad_min']:
-                    compatible = False
-            
-            if rol.get('edad_max') and perfil.get('edad'):
-                if perfil['edad'] > rol['edad_max']:
-                    compatible = False
-            
-            # Filtro de altura
-            if rol.get('altura_min') and perfil.get('altura_cm'):
-                if perfil['altura_cm'] < rol['altura_min']:
-                    compatible = False
-            
-            if rol.get('altura_max') and perfil.get('altura_cm'):
-                if perfil['altura_cm'] > rol['altura_max']:
-                    compatible = False
-            
-            if compatible:
+            if _strict_role_match(perfil, rol):
                 tiene_rol_compatible = True
                 break
         
@@ -818,6 +850,40 @@ async def buscar_talentos(
     
     return resultados
 
+# Endpoint para ver perfil completo de un talento (para productoras)
+@api_router.get("/talentos/{talento_id}/perfil")
+async def get_talento_perfil_detalle(
+    talento_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(
+            status_code=403,
+            detail="Solo las productoras pueden ver perfil completo de talentos"
+        )
+
+    user = await db.users.find_one({"id": talento_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Talento no encontrado")
+
+    if user.get("tipo_usuario") != "talento":
+        raise HTTPException(status_code=400, detail="El usuario indicado no es talento")
+
+    perfil = await db.perfiles_talento.find_one({"user_id": talento_id}, {"_id": 0})
+    if not perfil:
+        raise HTTPException(status_code=404, detail="Perfil de talento no encontrado")
+
+    # Payload unificado para frontend
+    return {
+        "user": {
+            "id": user.get("id"),
+            "nombre": user.get("nombre"),
+            "email": user.get("email"),
+            "tipo_usuario": user.get("tipo_usuario"),
+        },
+        "perfil": perfil,
+    }
+
 # Endpoint para auto-match (encontrar talentos que coincidan con un rol)
 @api_router.post("/auto-match")
 async def auto_match(
@@ -851,24 +917,11 @@ async def auto_match(
     # Buscar perfiles que coincidan
     perfiles = await db.perfiles_talento.find(filtro, {"_id": 0}).to_list(100)
     
-    # Filtrar por rangos
+    # Filtrar por matching estricto
     talentos = []
+    rol_dict = rol.model_dump()
     for perfil in perfiles:
-        incluir = True
-        
-        # Filtro de edad
-        if rol.edad_min and perfil.get('edad', 0) < rol.edad_min:
-            incluir = False
-        if rol.edad_max and perfil.get('edad', 999) > rol.edad_max:
-            incluir = False
-        
-        # Filtro de altura
-        if rol.altura_min and perfil.get('altura_cm', 0) < rol.altura_min:
-            incluir = False
-        if rol.altura_max and perfil.get('altura_cm', 999) > rol.altura_max:
-            incluir = False
-        
-        if incluir:
+        if _strict_role_match(perfil, rol_dict):
             # Agregar info del usuario
             user = await db.users.find_one({"id": perfil['user_id']}, {"_id": 0})
             if user:

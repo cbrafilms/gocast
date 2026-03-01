@@ -44,6 +44,9 @@ const CrearCasting = () => {
   const [matches, setMatches] = useState({});
   const [showMatches, setShowMatches] = useState(false);
   const [castingCreado, setCastingCreado] = useState(null);
+  const [showTalentModal, setShowTalentModal] = useState(false);
+  const [selectedTalentDetail, setSelectedTalentDetail] = useState(null);
+  const [loadingTalentDetail, setLoadingTalentDetail] = useState(false);
 
   const territoriosDisponibles = [
     'Argentina', 'Chile', 'Colombia', 'Mexico', 'Peru', 
@@ -201,6 +204,30 @@ const CrearCasting = () => {
     }
   };
 
+  const openTalentDetail = async (talentoId) => {
+    setShowTalentModal(true);
+    setLoadingTalentDetail(true);
+    setSelectedTalentDetail(null);
+
+    try {
+      const response = await axios.get(`${API}/talentos/${talentoId}/perfil`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedTalentDetail(response.data);
+    } catch (error) {
+      console.error('Error al cargar detalle de talento:', error);
+      setSelectedTalentDetail(null);
+    } finally {
+      setLoadingTalentDetail(false);
+    }
+  };
+
+  const closeTalentDetail = () => {
+    setShowTalentModal(false);
+    setSelectedTalentDetail(null);
+    setLoadingTalentDetail(false);
+  };
+
   const irAlDashboard = () => {
     navigate('/dashboard');
   };
@@ -242,7 +269,12 @@ const CrearCasting = () => {
                   {matches[index]?.talentos && matches[index].talentos.length > 0 ? (
                     <div className="talentos-matches-grid">
                       {matches[index].talentos.slice(0, 6).map((talento) => (
-                        <div key={talento.user_id} className="talento-match-card">
+                        <div
+                          key={talento.user_id}
+                          className="talento-match-card"
+                          onClick={() => openTalentDetail(talento.user_id)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <div className="talento-avatar-small">
                             {talento.nombre_completo?.charAt(0) || '?'}
                           </div>
@@ -252,7 +284,10 @@ const CrearCasting = () => {
                             <p className="talento-tipo-small">{talento.tipo_talento}</p>
                           </div>
                           <button 
-                            onClick={() => handleInvitarTalento(talento.user_id, rol.nombre_rol)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInvitarTalento(talento.user_id, rol.nombre_rol);
+                            }}
                             className="btn-invite-small"
                           >
                             Invitar
@@ -274,6 +309,35 @@ const CrearCasting = () => {
                   Buscar Mas Talentos
                 </button>
               </div>
+
+              {showTalentModal && (
+                <div className="modal-overlay" onClick={closeTalentDetail}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="section-header">
+                      <h3 className="section-title">Perfil completo del talento</h3>
+                      <button className="btn-secondary-small" onClick={closeTalentDetail}>Cerrar</button>
+                    </div>
+
+                    {loadingTalentDetail ? (
+                      <p>Cargando perfil...</p>
+                    ) : !selectedTalentDetail ? (
+                      <p>No se pudo cargar el perfil.</p>
+                    ) : (
+                      <div>
+                        <p><strong>Nombre:</strong> {selectedTalentDetail.user?.nombre}</p>
+                        <p><strong>Email:</strong> {selectedTalentDetail.user?.email}</p>
+                        <p><strong>Tipo:</strong> {selectedTalentDetail.perfil?.tipo_talento}</p>
+                        <p><strong>Edad:</strong> {selectedTalentDetail.perfil?.edad}</p>
+                        <p><strong>Ciudad:</strong> {selectedTalentDetail.perfil?.ciudad}, {selectedTalentDetail.perfil?.pais}</p>
+                        <p><strong>Altura:</strong> {selectedTalentDetail.perfil?.altura_cm} cm</p>
+                        <p><strong>Descripción:</strong> {selectedTalentDetail.perfil?.descripcion_corta || 'Sin descripción'}</p>
+                        <p><strong>Fotos:</strong> {selectedTalentDetail.perfil?.fotos?.length || 0} / 5</p>
+                        <p><strong>Video principal:</strong> {selectedTalentDetail.perfil?.videos?.[0] ? 'Sí' : 'No'}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
