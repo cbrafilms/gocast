@@ -323,6 +323,14 @@ class ClientRoleSelection(BaseModel):
 class ClientSelectionPayload(BaseModel):
     selections: List[ClientRoleSelection]
 
+
+class ContractDecisionPayload(BaseModel):
+    use_custom_contract: bool = False
+
+
+class ContractSignPayload(BaseModel):
+    signer_type: str  # talento | productora
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -1363,6 +1371,162 @@ async def save_client_selection(token: str, payload: ClientSelectionPayload):
     )
 
     return {"message": "Selección del cliente guardada"}
+
+
+# ===== ENDPOINTS DE CONTRATOS =====
+
+@api_router.post("/castings/{casting_id}/confirmar-seleccion")
+async def confirmar_seleccion_casting(
+    casting_id: str,
+    payload: ContractDecisionPayload,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting or casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    participantes = await db.casting_participantes.find(
+        {"casting_id": casting_id, "estado": "aceptado", "is_selected": True},
+        {"_id": 0}
+    ).to_list(200)
+
+    if len(participantes) == 0:
+        raise HTTPException(status_code=400, detail="No hay talentos seleccionados para confirmar")
+
+    updates = {
+        "estado": "seleccion_confirmada",
+        "contract_mode": "custom" if payload.use_custom_contract else "auto",
+        "fecha_actualizacion": datetime.now(timezone.utc).isoformat()
+    }
+
+    await db.castings.update_one({"id": casting_id}, {"$set": updates})
+
+    if payload.use_custom_contract:
+        return {"message": "Selección confirmada. Modo contrato propio activado", "contracts_created": 0}
+
+    contracts_created = 0
+    for p in participantes:
+        # Evita duplicados por casting+rol+talento
+        existing = await db.contracts.find_one({
+            "casting_id": casting_id,
+            "rol_nombre": p.get("rol_nombre"),
+            "talento_id": p.get("talento_id")
+        })
+        if existing:
+            continue
+
+        talento_profile = await db.perfiles_talento.find_one({"user_id": p.get("talento_id")}, {"_id": 0})
+        producer_profile = await db.users.find_one({"id": current_user.id}, {"_id": 0})
+
+        contract_doc = {
+            "id": str(uuid.uuid4()),
+            "casting_id": casting_id,
+            "rol_nombre": p.get("rol_nombre"),
+            "talento_id": p.get("talento_id"),
+            "talento_nombre": p.get("talento_nombre"),
+            "productora_id": current_user.id,
+            "productora_nombre": current_user.nombre,
+            "payload_legal": {
+                "casting_titulo": casting.get("titulo"),
+                "casting_descripcion": casting.get("descripcion"),
+                "fecha": datetime.now(timezone.utc).date().isoformat(),
+                "talento_nombre": p.get("talento_nombre"),
+                "talento_rut_dni": (talento_profile or {}).get("rut_dni"),
+                "productora_nombre": current_user.nombre,
+                "productora_rut_dni": (producer_profile or {}).get("rut_dni"),
+                "condiciones": "Pendiente de plantilla final"
+            },
+            "status": "pending_signatures",
+            "signatures": [],
+            "pdf_url": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+
+        await db.contracts.insert_one(contract_doc)
+        contracts_created += 1
+
+    return {
+        "message": "Selección confirmada y contratos generados",
+        "contracts_created": contracts_created
+    }
+
+
+@api_router.get("/castings/{casting_id}/contracts")
+async def list_casting_contracts(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting or casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    contracts = await db.contracts.find({"casting_id": casting_id}, {"_id": 0}).to_list(200)
+    return contracts
+
+
+@api_router.post("/contracts/{contract_id}/sign")
+async def sign_contract(
+    contract_id: str,
+    payload: ContractSignPayload,
+    current_user: User = Depends(get_current_user),
+    x_forwarded_for: Optional[str] = Header(default=None)
+):
+    contract = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contrato no encontrado")
+
+    signer = payload.signer_type.strip().lower()
+    if signer not in ["talento", "productora"]:
+        raise HTTPException(status_code=400, detail="signer_type inválido")
+
+    if signer == "productora" and current_user.id != contract.get("productora_id"):
+        raise HTTPException(status_code=403, detail="No autorizado para firmar como productora")
+
+    if signer == "talento" and current_user.id != contract.get("talento_id"):
+        raise HTTPException(status_code=403, detail="No autorizado para firmar como talento")
+
+    signatures = contract.get("signatures", [])
+    if any(s.get("signer_type") == signer for s in signatures):
+        return {"message": f"{signer} ya firmó este contrato"}
+
+    signatures.append({
+        "signer_type": signer,
+        "signer_user_id": current_user.id,
+        "signed_at": datetime.now(timezone.utc).isoformat(),
+        "ip": x_forwarded_for,
+    })
+
+    status = "partially_signed"
+    if any(s.get("signer_type") == "productora" for s in signatures) and any(s.get("signer_type") == "talento" for s in signatures):
+        status = "contract_closed"
+
+    pdf_url = contract.get("pdf_url")
+    if status == "contract_closed" and not pdf_url:
+        # Placeholder de PDF (pendiente integración real)
+        pdf_url = f"/api/contracts/{contract_id}/pdf"
+
+    await db.contracts.update_one(
+        {"id": contract_id},
+        {"$set": {
+            "signatures": signatures,
+            "status": status,
+            "pdf_url": pdf_url,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+
+    return {
+        "message": "Firma registrada",
+        "status": status,
+        "pdf_url": pdf_url
+    }
 
 
 # ===== ENDPOINTS DE SHORTLIST =====

@@ -18,6 +18,7 @@ const GestionCasting = () => {
   const [sugeridosPorRol, setSugeridosPorRol] = useState([]);
   const [participantes, setParticipantes] = useState([]);
   const [shareUrlCliente, setShareUrlCliente] = useState('');
+  const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('aplicaciones');
   const [showTalentModal, setShowTalentModal] = useState(false);
@@ -77,6 +78,12 @@ const GestionCasting = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParticipantes(partRes.data || []);
+
+      // Obtener contratos del casting
+      const contractRes = await axios.get(`${API}/castings/${id}/contracts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContracts(contractRes.data || []);
 
     } catch (error) {
       console.error('Error al cargar datos:', error);
@@ -229,6 +236,22 @@ const GestionCasting = () => {
     }
   };
 
+  const confirmarSeleccion = async (useCustomContract) => {
+    try {
+      const response = await axios.post(`${API}/castings/${id}/confirmar-seleccion`, {
+        use_custom_contract: useCustomContract
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccessMessage(response.data?.message || 'Selección confirmada');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      fetchData();
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al confirmar selección');
+    }
+  };
+
   if (!user || user.tipo_usuario !== 'productora') {
     return (
       <div className="gocast-page">
@@ -296,6 +319,12 @@ const GestionCasting = () => {
               onClick={() => setActiveTab('participantes')}
             >
               Participantes ({participantes.length})
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'contratos' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('contratos')}
+            >
+              Contratos ({contracts.length})
             </button>
           </div>
 
@@ -532,6 +561,45 @@ const GestionCasting = () => {
                             {p.is_backup ? 'Quitar backup' : 'Marcar backup'}
                           </button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Contratos */}
+            {activeTab === 'contratos' && (
+              <div className="shortlists-section">
+                <div className="section-header">
+                  <h2 className="section-title">Contratos</h2>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn-primary" onClick={() => confirmarSeleccion(false)}>
+                      Confirmar selección + contrato automático
+                    </button>
+                    <button className="btn-secondary" onClick={() => confirmarSeleccion(true)}>
+                      Confirmar selección (contrato propio)
+                    </button>
+                  </div>
+                </div>
+
+                {contracts.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-icon">📝</p>
+                    <p className="empty-title">Sin contratos aún</p>
+                    <p className="empty-text">Confirma selección para generar contratos automáticos.</p>
+                  </div>
+                ) : (
+                  <div className="shortlists-list">
+                    {contracts.map((c) => (
+                      <div key={c.id} className="shortlist-card">
+                        <div className="shortlist-info">
+                          <h3>{c.talento_nombre}</h3>
+                          <p><strong>Rol:</strong> {c.rol_nombre}</p>
+                          <p><strong>Estado:</strong> {c.status}</p>
+                          <p><strong>Firmas:</strong> {(c.signatures || []).length}/2</p>
+                        </div>
+                        {c.pdf_url && <a className="btn-copy" href={c.pdf_url} target="_blank" rel="noreferrer">Ver PDF</a>}
                       </div>
                     ))}
                   </div>
