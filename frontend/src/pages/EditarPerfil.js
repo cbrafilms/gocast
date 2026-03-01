@@ -34,6 +34,8 @@ const EditarPerfil = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [fotoInput, setFotoInput] = useState('');
+  const [videoInput, setVideoInput] = useState('');
 
   useEffect(() => {
     if (!user || user.tipo_usuario !== 'talento') {
@@ -87,10 +89,43 @@ const EditarPerfil = () => {
     if (!formData.talla_zapatos?.trim()) newErrors.talla_zapatos = 'La talla de zapatos es requerida';
     if (!formData.descripcion_corta?.trim()) newErrors.descripcion_corta = 'La descripción es requerida';
     if (!formData.disponibilidad || formData.disponibilidad.length === 0) newErrors.disponibilidad = 'Selecciona al menos un día';
+    if ((formData.fotos || []).length < 1) newErrors.fotos = 'Debes mantener al menos 1 foto';
+    if ((formData.videos || []).length < 1) newErrors.videos = 'Debes mantener al menos 1 video';
+    if ((formData.fotos || []).length > 5) newErrors.fotos = 'Máximo 5 fotos';
+    if ((formData.videos || []).length > 1) newErrors.videos = 'Máximo 1 video';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const addFoto = () => {
+    const url = fotoInput.trim();
+    if (!url || (formData.fotos || []).length >= 5) return;
+    setFormData(prev => ({ ...prev, fotos: [...(prev.fotos || []), url] }));
+    setFotoInput('');
+  };
+
+  const removeFoto = (idx) => {
+    setFormData(prev => ({ ...prev, fotos: (prev.fotos || []).filter((_, i) => i !== idx) }));
+  };
+
+  const setFotoPrincipal = (idx) => {
+    setFormData(prev => {
+      const fotos = [...(prev.fotos || [])];
+      if (idx < 0 || idx >= fotos.length) return prev;
+      const [principal] = fotos.splice(idx, 1);
+      return { ...prev, fotos: [principal, ...fotos] };
+    });
+  };
+
+  const addVideo = () => {
+    const url = videoInput.trim();
+    if (!url) return;
+    setFormData(prev => ({ ...prev, videos: [url] }));
+    setVideoInput('');
+  };
+
+  const removeVideo = () => setFormData(prev => ({ ...prev, videos: [] }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -292,6 +327,40 @@ const EditarPerfil = () => {
                 ))}
               </div>
               {errors.disponibilidad && <span className="form-error">{errors.disponibilidad}</span>}
+            </div>
+
+            <div className="perfil-card">
+              <h2 className="card-title">Media</h2>
+              <p className="info-text">Min 1 foto + 1 video | Max 5 fotos + 1 video</p>
+
+              <div className="form-group">
+                <label className="form-label">Fotos (URLs)</label>
+                <div className="form-row">
+                  <input className="form-input" value={fotoInput} onChange={(e) => setFotoInput(e.target.value)} placeholder="https://..." />
+                  <button type="button" className="btn-secondary" onClick={addFoto}>Agregar</button>
+                </div>
+                {errors.fotos && <span className="form-error">{errors.fotos}</span>}
+                <ul>
+                  {(formData.fotos || []).map((f, idx) => (
+                    <li key={`${f}-${idx}`}>
+                      {idx === 0 ? '🌟 ' : ''}{f}
+                      <button type="button" className="btn-secondary-small" onClick={() => setFotoPrincipal(idx)} style={{ marginLeft: 8 }}>Principal</button>
+                      <button type="button" className="btn-secondary-small" onClick={() => removeFoto(idx)} style={{ marginLeft: 8 }}>Eliminar</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Video interno (URL)</label>
+                <div className="form-row">
+                  <input className="form-input" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} placeholder="https://..." />
+                  <button type="button" className="btn-secondary" onClick={addVideo}>Guardar</button>
+                  <button type="button" className="btn-secondary" onClick={removeVideo}>Quitar</button>
+                </div>
+                {errors.videos && <span className="form-error">{errors.videos}</span>}
+                <ul>{(formData.videos || []).map((v, idx) => <li key={`${v}-${idx}`}>{v}</li>)}</ul>
+              </div>
             </div>
 
             <button type="submit" className="btn-submit-large" disabled={isSubmitting} data-testid="btn-actualizar">

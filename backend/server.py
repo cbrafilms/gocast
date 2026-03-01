@@ -43,6 +43,23 @@ def _normalized_text(value: Optional[str]) -> str:
     return str(value).strip().lower()
 
 
+def _validate_media_limits(fotos: List[str], videos: List[str]):
+    if len(fotos) < 1:
+        raise HTTPException(status_code=400, detail="Debes cargar al menos 1 foto")
+    if len(videos) < 1:
+        raise HTTPException(status_code=400, detail="Debes cargar al menos 1 video")
+    if len(fotos) > 5:
+        raise HTTPException(status_code=400, detail="Máximo 5 fotos")
+    if len(videos) > 1:
+        raise HTTPException(status_code=400, detail="Máximo 1 video interno")
+
+    for url in fotos + videos:
+        if not isinstance(url, str) or not url.strip().startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="Las URLs de media deben empezar con http(s)")
+        if len(url.strip()) > 800:
+            raise HTTPException(status_code=400, detail="URL de media demasiado larga")
+
+
 def _strict_role_match(perfil: dict, rol: dict) -> bool:
     """Strict matching: if a filter is defined in role, talent must satisfy it.
     Missing talent value for a required filter means no match.
@@ -331,6 +348,12 @@ class ContractDecisionPayload(BaseModel):
 class ContractSignPayload(BaseModel):
     signer_type: str  # talento | productora
 
+
+class MediaUpdatePayload(BaseModel):
+    fotos: List[str]
+    videos: List[str]
+    foto_principal_index: int = 0
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -572,9 +595,15 @@ async def crear_perfil_talento(
             detail="Solo los talentos pueden crear perfil"
         )
     
+    payload = perfil_data.model_dump()
+    payload['fotos'] = [u.strip() for u in (payload.get('fotos') or []) if isinstance(u, str) and u.strip()]
+    payload['videos'] = [u.strip() for u in (payload.get('videos') or []) if isinstance(u, str) and u.strip()]
+
+    _validate_media_limits(payload['fotos'], payload['videos'])
+
     # Crear objeto Perfil
     perfil = PerfilTalento(
-        **perfil_data.model_dump(),
+        **payload,
         user_id=current_user.id
     )
     
@@ -636,6 +665,40 @@ async def get_perfil_talento(current_user: User = Depends(get_current_user)):
         perfil_doc['fecha_creacion'] = datetime.fromisoformat(perfil_doc['fecha_creacion'])
     
     return PerfilTalento(**perfil_doc)
+
+
+@api_router.put("/perfil-talento/media")
+async def update_perfil_media(
+    payload: MediaUpdatePayload,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'talento':
+        raise HTTPException(status_code=403, detail="Solo talentos")
+
+    fotos_clean = [u.strip() for u in payload.fotos if isinstance(u, str) and u.strip()]
+    videos_clean = [u.strip() for u in payload.videos if isinstance(u, str) and u.strip()]
+
+    _validate_media_limits(fotos_clean, videos_clean)
+
+    if payload.foto_principal_index < 0 or payload.foto_principal_index >= len(fotos_clean):
+        raise HTTPException(status_code=400, detail="foto_principal_index fuera de rango")
+
+    # Reordena para dejar la foto principal primero
+    principal = fotos_clean.pop(payload.foto_principal_index)
+    fotos_final = [principal] + fotos_clean
+
+    result = await db.perfiles_talento.update_one(
+        {"user_id": current_user.id},
+        {"$set": {
+            "fotos": fotos_final,
+            "videos": videos_clean
+        }}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+
+    return {"message": "Media actualizada", "fotos": fotos_final, "videos": videos_clean}
 
 # Endpoint para aplicar a un casting
 @api_router.post("/aplicaciones", response_model=Aplicacion)

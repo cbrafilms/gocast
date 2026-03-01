@@ -32,6 +32,8 @@ const CompletarPerfil = () => {
   
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fotoInput, setFotoInput] = useState('');
+  const [videoInput, setVideoInput] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -64,9 +66,36 @@ const CompletarPerfil = () => {
     if (!formData.talla_zapatos.trim()) newErrors.talla_zapatos = 'La talla de zapatos es requerida';
     if (!formData.descripcion_corta.trim()) newErrors.descripcion_corta = 'La descripción es requerida';
     if (formData.disponibilidad.length === 0) newErrors.disponibilidad = 'Selecciona al menos un día';
+    if ((formData.fotos || []).length < 1) newErrors.fotos = 'Debes agregar al menos 1 foto';
+    if ((formData.videos || []).length < 1) newErrors.videos = 'Debes agregar al menos 1 video';
+    if ((formData.fotos || []).length > 5) newErrors.fotos = 'Máximo 5 fotos';
+    if ((formData.videos || []).length > 1) newErrors.videos = 'Máximo 1 video interno';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const addFoto = () => {
+    const url = fotoInput.trim();
+    if (!url) return;
+    if (formData.fotos.length >= 5) return;
+    setFormData(prev => ({ ...prev, fotos: [...prev.fotos, url] }));
+    setFotoInput('');
+  };
+
+  const removeFoto = (idx) => {
+    setFormData(prev => ({ ...prev, fotos: prev.fotos.filter((_, i) => i !== idx) }));
+  };
+
+  const addVideo = () => {
+    const url = videoInput.trim();
+    if (!url) return;
+    setFormData(prev => ({ ...prev, videos: [url] }));
+    setVideoInput('');
+  };
+
+  const removeVideo = () => {
+    setFormData(prev => ({ ...prev, videos: [] }));
   };
 
   const handleSubmit = async (e) => {
@@ -263,9 +292,36 @@ const CompletarPerfil = () => {
             {/* Multimedia */}
             <div className="perfil-card">
               <h2 className="card-title">Multimedia</h2>
-              <div className="multimedia-info">
-                <p className="info-text">📸 Debes subir al menos <strong>1 foto</strong> y <strong>1 video</strong> de presentación.</p>
-                <p className="info-text-small">La funcionalidad de subida de archivos se implementará en la próxima fase. Por ahora, el perfil se guardará con esta información.</p>
+              <p className="info-text">Obligatorio: mínimo 1 foto y 1 video | máximo 5 fotos y 1 video</p>
+
+              <div className="form-group">
+                <label className="form-label">Agregar URL de foto</label>
+                <div className="form-row">
+                  <input className="form-input" value={fotoInput} onChange={(e) => setFotoInput(e.target.value)} placeholder="https://..." />
+                  <button type="button" className="btn-secondary" onClick={addFoto}>Agregar foto</button>
+                </div>
+                {errors.fotos && <span className="form-error">{errors.fotos}</span>}
+                <ul>
+                  {(formData.fotos || []).map((f, idx) => (
+                    <li key={`${f}-${idx}`}>
+                      {idx === 0 ? '🌟 ' : ''}{f}
+                      <button type="button" className="btn-secondary-small" onClick={() => removeFoto(idx)} style={{ marginLeft: 8 }}>Eliminar</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Video interno (1 URL)</label>
+                <div className="form-row">
+                  <input className="form-input" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} placeholder="https://..." />
+                  <button type="button" className="btn-secondary" onClick={addVideo}>Guardar video</button>
+                  <button type="button" className="btn-secondary" onClick={removeVideo}>Quitar video</button>
+                </div>
+                {errors.videos && <span className="form-error">{errors.videos}</span>}
+                <ul>
+                  {(formData.videos || []).map((v, idx) => <li key={`${v}-${idx}`}>{v}</li>)}
+                </ul>
               </div>
             </div>
 
