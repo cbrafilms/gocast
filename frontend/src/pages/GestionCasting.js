@@ -16,6 +16,7 @@ const GestionCasting = () => {
   const [preseleccionados, setPreseleccionados] = useState([]);
   const [shortlists, setShortlists] = useState([]);
   const [sugeridosPorRol, setSugeridosPorRol] = useState([]);
+  const [participantes, setParticipantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('aplicaciones');
   const [showTalentModal, setShowTalentModal] = useState(false);
@@ -69,6 +70,12 @@ const GestionCasting = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSugeridosPorRol(sugRes.data?.roles || []);
+
+      // Obtener participantes (invitaciones aceptadas/rechazadas)
+      const partRes = await axios.get(`${API}/castings/${id}/participantes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParticipantes(partRes.data || []);
 
     } catch (error) {
       console.error('Error al cargar datos:', error);
@@ -190,6 +197,20 @@ const GestionCasting = () => {
     setLoadingTalentDetail(false);
   };
 
+  const updateParticipanteFlags = async (participanteId, updates) => {
+    try {
+      await axios.put(`${API}/castings/${id}/participantes/${participanteId}`, null, {
+        params: updates,
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccessMessage('Participante actualizado');
+      setTimeout(() => setSuccessMessage(''), 2000);
+      fetchData();
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al actualizar participante');
+    }
+  };
+
   if (!user || user.tipo_usuario !== 'productora') {
     return (
       <div className="gocast-page">
@@ -251,6 +272,12 @@ const GestionCasting = () => {
               onClick={() => setActiveTab('sugeridos')}
             >
               Sugeridos ({sugeridosPorRol.reduce((acc, rol) => acc + (rol.total || 0), 0)})
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'participantes' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('participantes')}
+            >
+              Participantes ({participantes.length})
             </button>
           </div>
 
@@ -436,6 +463,46 @@ const GestionCasting = () => {
                       )}
                     </div>
                   ))
+                )}
+              </div>
+            )}
+
+            {/* Participantes */}
+            {activeTab === 'participantes' && (
+              <div className="shortlists-section">
+                <h2 className="section-title">Participantes del casting</h2>
+                {participantes.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-icon">👥</p>
+                    <p className="empty-title">Sin participantes todavía</p>
+                    <p className="empty-text">Aparecen cuando un talento responde una invitación.</p>
+                  </div>
+                ) : (
+                  <div className="shortlists-list">
+                    {participantes.map((p) => (
+                      <div key={p.id} className="shortlist-card">
+                        <div className="shortlist-info">
+                          <h3>{p.talento_nombre}</h3>
+                          <p><strong>Rol:</strong> {p.rol_nombre}</p>
+                          <p><strong>Estado:</strong> {p.estado}</p>
+                        </div>
+                        <div className="casting-card-actions">
+                          <button
+                            className="btn-primary-small"
+                            onClick={() => updateParticipanteFlags(p.id, { is_selected: !p.is_selected })}
+                          >
+                            {p.is_selected ? 'Quitar seleccionado' : 'Marcar seleccionado'}
+                          </button>
+                          <button
+                            className="btn-secondary-small"
+                            onClick={() => updateParticipanteFlags(p.id, { is_backup: !p.is_backup })}
+                          >
+                            {p.is_backup ? 'Quitar backup' : 'Marcar backup'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

@@ -292,6 +292,22 @@ class Shortlist(BaseModel):
     estado: str = "activo"  # activo, cerrado
     fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+# Participantes del casting (flujo de invitación)
+class CastingParticipante(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    casting_id: str
+    rol_nombre: str
+    talento_id: str
+    talento_nombre: str
+    estado: str = "pendiente"  # pendiente, aceptado, rechazado
+    source: str = "invitacion"
+    is_selected: bool = False
+    is_backup: bool = False
+    fecha_actualizacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Helper Functions
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -1087,6 +1103,16 @@ async def responder_invitacion(
             detail="Respuesta debe ser 'aceptada' o 'rechazada'"
         )
     
+    invitacion = await db.invitaciones.find_one(
+        {"id": invitacion_id, "talento_id": current_user.id},
+        {"_id": 0}
+    )
+    if not invitacion:
+        raise HTTPException(
+            status_code=404,
+            detail="Invitación no encontrada"
+        )
+
     # Actualizar invitación
     result = await db.invitaciones.update_one(
         {"id": invitacion_id, "talento_id": current_user.id},
@@ -1095,14 +1121,103 @@ async def responder_invitacion(
             "respuesta_talento": mensaje_respuesta
         }}
     )
-    
+
     if result.modified_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Invitación no encontrada"
+            detail="No se pudo actualizar la invitación"
         )
-    
+
+    # Sincronizar participante del casting
+    estado_participante = "aceptado" if respuesta == "aceptada" else "rechazado"
+    participante = CastingParticipante(
+        casting_id=invitacion.get("casting_id"),
+        rol_nombre=invitacion.get("rol_nombre", "General"),
+        talento_id=current_user.id,
+        talento_nombre=invitacion.get("talento_nombre", current_user.nombre),
+        estado=estado_participante,
+        source="invitacion"
+    )
+
+    participante_doc = participante.model_dump()
+    participante_doc['fecha_actualizacion'] = participante_doc['fecha_actualizacion'].isoformat()
+
+    await db.casting_participantes.update_one(
+        {
+            "casting_id": invitacion.get("casting_id"),
+            "rol_nombre": invitacion.get("rol_nombre", "General"),
+            "talento_id": current_user.id,
+        },
+        {
+            "$set": participante_doc,
+            "$setOnInsert": {"id": participante.id}
+        },
+        upsert=True
+    )
+
     return {"message": f"Invitación {respuesta} exitosamente"}
+
+# ===== ENDPOINTS DE PARTICIPANTES =====
+
+@api_router.get("/castings/{casting_id}/participantes")
+async def get_participantes_casting(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting or casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    participantes = await db.casting_participantes.find(
+        {"casting_id": casting_id},
+        {"_id": 0}
+    ).to_list(200)
+
+    for p in participantes:
+        if isinstance(p.get('fecha_actualizacion'), str):
+            p['fecha_actualizacion'] = datetime.fromisoformat(p['fecha_actualizacion'])
+
+    return participantes
+
+
+@api_router.put("/castings/{casting_id}/participantes/{participante_id}")
+async def update_participante_flags(
+    casting_id: str,
+    participante_id: str,
+    is_selected: Optional[bool] = None,
+    is_backup: Optional[bool] = None,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting or casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    participante = await db.casting_participantes.find_one(
+        {"id": participante_id, "casting_id": casting_id},
+        {"_id": 0}
+    )
+    if not participante:
+        raise HTTPException(status_code=404, detail="Participante no encontrado")
+
+    update_fields = {"fecha_actualizacion": datetime.now(timezone.utc).isoformat()}
+    if is_selected is not None:
+        update_fields["is_selected"] = bool(is_selected)
+    if is_backup is not None:
+        update_fields["is_backup"] = bool(is_backup)
+
+    await db.casting_participantes.update_one(
+        {"id": participante_id, "casting_id": casting_id},
+        {"$set": update_fields}
+    )
+
+    return {"message": "Participante actualizado"}
+
 
 # ===== ENDPOINTS DE SHORTLIST =====
 
