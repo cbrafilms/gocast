@@ -15,8 +15,12 @@ const GestionCasting = () => {
   const [aplicaciones, setAplicaciones] = useState([]);
   const [preseleccionados, setPreseleccionados] = useState([]);
   const [shortlists, setShortlists] = useState([]);
+  const [sugeridosPorRol, setSugeridosPorRol] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('aplicaciones');
+  const [showTalentModal, setShowTalentModal] = useState(false);
+  const [selectedTalentDetail, setSelectedTalentDetail] = useState(null);
+  const [loadingTalentDetail, setLoadingTalentDetail] = useState(false);
   const [showCreateShortlist, setShowCreateShortlist] = useState(false);
   const [shortlistName, setShortlistName] = useState('');
   const [selectedForShortlist, setSelectedForShortlist] = useState([]);
@@ -59,6 +63,12 @@ const GestionCasting = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShortlists(shortRes.data);
+
+      // Obtener sugeridos automáticos por rol
+      const sugRes = await axios.get(`${API}/castings/${id}/sugeridos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSugeridosPorRol(sugRes.data?.roles || []);
 
     } catch (error) {
       console.error('Error al cargar datos:', error);
@@ -137,6 +147,49 @@ const GestionCasting = () => {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  const handleInvitarSugerido = async (talentoId, rolNombre) => {
+    try {
+      await axios.post(`${API}/invitaciones`, {
+        casting_id: id,
+        rol_nombre: rolNombre,
+        talento_id: talentoId,
+        mensaje: `Te invitamos al casting "${casting?.titulo || ''}"`
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccessMessage('Invitación enviada exitosamente');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      fetchData();
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al enviar invitación');
+    }
+  };
+
+  const openTalentDetail = async (talentoId) => {
+    setShowTalentModal(true);
+    setLoadingTalentDetail(true);
+    setSelectedTalentDetail(null);
+
+    try {
+      const response = await axios.get(`${API}/talentos/${talentoId}/perfil`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedTalentDetail(response.data);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al cargar perfil de talento');
+      setSelectedTalentDetail(null);
+    } finally {
+      setLoadingTalentDetail(false);
+    }
+  };
+
+  const closeTalentDetail = () => {
+    setShowTalentModal(false);
+    setSelectedTalentDetail(null);
+    setLoadingTalentDetail(false);
+  };
+
   if (!user || user.tipo_usuario !== 'productora') {
     return (
       <div className="gocast-page">
@@ -192,6 +245,12 @@ const GestionCasting = () => {
               onClick={() => setActiveTab('shortlists')}
             >
               Shortlists ({shortlists.length})
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'sugeridos' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('sugeridos')}
+            >
+              Sugeridos ({sugeridosPorRol.reduce((acc, rol) => acc + (rol.total || 0), 0)})
             </button>
           </div>
 
@@ -327,6 +386,60 @@ const GestionCasting = () => {
               </div>
             )}
 
+            {/* Sugeridos automáticos */}
+            {activeTab === 'sugeridos' && (
+              <div className="preseleccionados-section">
+                <h2 className="section-title">Talentos sugeridos por matching estricto</h2>
+                {sugeridosPorRol.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-icon">🎯</p>
+                    <p className="empty-title">Sin sugeridos por ahora</p>
+                    <p className="empty-text">Completa más datos en filtros del rol o en perfiles de talento.</p>
+                  </div>
+                ) : (
+                  sugeridosPorRol.map((rol) => (
+                    <div key={rol.rol_nombre} className="matches-rol-section">
+                      <h3 className="rol-matches-title">
+                        Rol: {rol.rol_nombre}
+                        <span className="matches-count"> ({rol.total || 0} coincidencias)</span>
+                      </h3>
+
+                      {!rol.talentos || rol.talentos.length === 0 ? (
+                        <p className="no-matches">No hay talentos para este rol.</p>
+                      ) : (
+                        <div className="talentos-matches-grid">
+                          {rol.talentos.map((talento) => (
+                            <div
+                              key={`${rol.rol_nombre}-${talento.talento_id}`}
+                              className="talento-match-card"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => openTalentDetail(talento.talento_id)}
+                            >
+                              <div className="talento-avatar-small">{talento.nombre?.charAt(0) || '?'}</div>
+                              <div className="talento-match-info">
+                                <h4>{talento.nombre}</h4>
+                                <p>{talento.edad || '-'} años - {talento.ciudad || '-'}</p>
+                                <p className="talento-tipo-small">{talento.tipo_talento || '-'}</p>
+                              </div>
+                              <button
+                                className="btn-invite-small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleInvitarSugerido(talento.talento_id, rol.rol_nombre);
+                                }}
+                              >
+                                Invitar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
             {/* Shortlists */}
             {activeTab === 'shortlists' && (
               <div className="shortlists-section">
@@ -362,6 +475,35 @@ const GestionCasting = () => {
               </div>
             )}
           </div>
+
+          {showTalentModal && (
+            <div className="modal-overlay" onClick={closeTalentDetail}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="section-header">
+                  <h3 className="section-title">Perfil completo del talento</h3>
+                  <button className="btn-secondary-small" onClick={closeTalentDetail}>Cerrar</button>
+                </div>
+
+                {loadingTalentDetail ? (
+                  <p>Cargando perfil...</p>
+                ) : !selectedTalentDetail ? (
+                  <p>No se pudo cargar el perfil.</p>
+                ) : (
+                  <div>
+                    <p><strong>Nombre:</strong> {selectedTalentDetail.user?.nombre}</p>
+                    <p><strong>Email:</strong> {selectedTalentDetail.user?.email}</p>
+                    <p><strong>Tipo:</strong> {selectedTalentDetail.perfil?.tipo_talento}</p>
+                    <p><strong>Edad:</strong> {selectedTalentDetail.perfil?.edad}</p>
+                    <p><strong>Ciudad:</strong> {selectedTalentDetail.perfil?.ciudad}, {selectedTalentDetail.perfil?.pais}</p>
+                    <p><strong>Altura:</strong> {selectedTalentDetail.perfil?.altura_cm} cm</p>
+                    <p><strong>Descripción:</strong> {selectedTalentDetail.perfil?.descripcion_corta || 'Sin descripción'}</p>
+                    <p><strong>Fotos:</strong> {selectedTalentDetail.perfil?.fotos?.length || 0} / 5</p>
+                    <p><strong>Video principal:</strong> {selectedTalentDetail.perfil?.videos?.[0] ? 'Sí' : 'No'}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

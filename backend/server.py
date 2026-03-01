@@ -738,6 +738,61 @@ async def get_casting_detalle(
     
     return Casting(**casting)
 
+# Endpoint para sugeridos automáticos dentro de un casting (por rol)
+@api_router.get("/castings/{casting_id}/sugeridos")
+async def get_sugeridos_casting(
+    casting_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.tipo_usuario != 'productora':
+        raise HTTPException(status_code=403, detail="Solo productoras")
+
+    casting = await db.castings.find_one({"id": casting_id}, {"_id": 0})
+    if not casting:
+        raise HTTPException(status_code=404, detail="Casting no encontrado")
+
+    if casting.get('productora_id') != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para este casting")
+
+    perfiles = await db.perfiles_talento.find({}, {"_id": 0}).to_list(300)
+
+    sugeridos_por_rol = []
+    for rol in casting.get('roles', []):
+        talentos = []
+        for perfil in perfiles:
+            if not _strict_role_match(perfil, rol):
+                continue
+
+            talento_user = await db.users.find_one({"id": perfil.get("user_id")}, {"_id": 0, "password": 0})
+            if not talento_user:
+                continue
+
+            talentos.append({
+                "talento_id": perfil.get("user_id"),
+                "nombre": perfil.get("nombre_completo") or talento_user.get("nombre"),
+                "email": talento_user.get("email"),
+                "tipo_talento": perfil.get("tipo_talento"),
+                "edad": perfil.get("edad"),
+                "ciudad": perfil.get("ciudad"),
+                "pais": perfil.get("pais"),
+                "altura_cm": perfil.get("altura_cm"),
+                "fotos": perfil.get("fotos", []),
+                "videos": perfil.get("videos", []),
+            })
+
+        sugeridos_por_rol.append({
+            "rol_nombre": rol.get("nombre_rol", "Rol"),
+            "rol_descripcion": rol.get("descripcion_rol", ""),
+            "total": len(talentos),
+            "talentos": talentos[:30]
+        })
+
+    return {
+        "casting_id": casting_id,
+        "casting_titulo": casting.get("titulo"),
+        "roles": sugeridos_por_rol
+    }
+
 # Endpoint para obtener castings filtrados según perfil del talento
 @api_router.get("/castings-recomendados", response_model=List[Casting])
 async def get_castings_recomendados(current_user: User = Depends(get_current_user)):
