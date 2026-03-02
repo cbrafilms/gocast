@@ -11,6 +11,7 @@ Sube estos archivos a `public_html/api/`:
 - `register.php`
 - `login.php`
 - `verify-token.php`
+- `upload-media.php`
 - `.htaccess`
 
 ## 3) Configurar frontend
@@ -28,9 +29,15 @@ curl -X POST https://TU-DOMINIO/api/register \
 curl -X POST https://TU-DOMINIO/api/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"test@example.com","password":"123456"}'
+
+curl -X POST https://TU-DOMINIO/api/upload-media \
+  -F 'kind=foto' \
+  -F 'file=@/ruta/foto.jpg'
 ```
 
 ## Notas rápidas
 - Usa `password_hash` / `password_verify` (ya incluido).
 - Cambia `JWT_SECRET` por uno robusto.
 - En producción, fija `ALLOWED_ORIGIN` al dominio real.
+- Para uploads, crea también `public_html/uploads/fotos` y `public_html/uploads/videos`.
+- Copia `uploads.htaccess` como `public_html/uploads/.htaccess` para bloquear ejecución de scripts.

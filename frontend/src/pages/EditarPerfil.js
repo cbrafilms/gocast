@@ -36,6 +36,8 @@ const EditarPerfil = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [fotoInput, setFotoInput] = useState('');
   const [videoInput, setVideoInput] = useState('');
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   useEffect(() => {
     if (!user || user.tipo_usuario !== 'talento') {
@@ -126,6 +128,59 @@ const EditarPerfil = () => {
   };
 
   const removeVideo = () => setFormData(prev => ({ ...prev, videos: [] }));
+
+  const uploadMediaFile = async (file, kind) => {
+    const data = new FormData();
+    data.append('kind', kind);
+    data.append('file', file);
+
+    const response = await axios.post(`${API}/upload-media`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    return response?.data?.url;
+  };
+
+  const handleFotoFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if ((formData.fotos || []).length >= 5) {
+      setErrors(prev => ({ ...prev, fotos: 'Máximo 5 fotos' }));
+      return;
+    }
+
+    try {
+      setUploadingFoto(true);
+      const url = await uploadMediaFile(file, 'foto');
+      setFormData(prev => ({ ...prev, fotos: [...(prev.fotos || []), url] }));
+      setErrors(prev => ({ ...prev, fotos: '' }));
+    } catch (error) {
+      setErrors(prev => ({ ...prev, fotos: error.response?.data?.detail || 'Error al subir foto' }));
+    } finally {
+      setUploadingFoto(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleVideoFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      const url = await uploadMediaFile(file, 'video');
+      setFormData(prev => ({ ...prev, videos: [url] }));
+      setErrors(prev => ({ ...prev, videos: '' }));
+    } catch (error) {
+      setErrors(prev => ({ ...prev, videos: error.response?.data?.detail || 'Error al subir video' }));
+    } finally {
+      setUploadingVideo(false);
+      e.target.value = '';
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -334,10 +389,12 @@ const EditarPerfil = () => {
               <p className="info-text">Min 1 foto + 1 video | Max 5 fotos + 1 video</p>
 
               <div className="form-group">
-                <label className="form-label">Fotos (URLs)</label>
-                <div className="form-row">
+                <label className="form-label">Fotos (archivo o URL)</label>
+                <div className="form-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFotoFile} className="form-input" style={{ maxWidth: 320 }} />
+                  {uploadingFoto && <span className="info-text">Subiendo foto...</span>}
                   <input className="form-input" value={fotoInput} onChange={(e) => setFotoInput(e.target.value)} placeholder="https://..." />
-                  <button type="button" className="btn-secondary" onClick={addFoto}>Agregar</button>
+                  <button type="button" className="btn-secondary" onClick={addFoto}>Agregar URL</button>
                 </div>
                 {errors.fotos && <span className="form-error">{errors.fotos}</span>}
                 <ul>
@@ -352,10 +409,12 @@ const EditarPerfil = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Video interno (URL)</label>
-                <div className="form-row">
+                <label className="form-label">Video interno (archivo o URL)</label>
+                <div className="form-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <input type="file" accept="video/mp4,video/quicktime,video/webm" onChange={handleVideoFile} className="form-input" style={{ maxWidth: 320 }} />
+                  {uploadingVideo && <span className="info-text">Subiendo video...</span>}
                   <input className="form-input" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} placeholder="https://..." />
-                  <button type="button" className="btn-secondary" onClick={addVideo}>Guardar</button>
+                  <button type="button" className="btn-secondary" onClick={addVideo}>Guardar URL</button>
                   <button type="button" className="btn-secondary" onClick={removeVideo}>Quitar</button>
                 </div>
                 {errors.videos && <span className="form-error">{errors.videos}</span>}
@@ -363,7 +422,7 @@ const EditarPerfil = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn-submit-large" disabled={isSubmitting} data-testid="btn-actualizar">
+            <button type="submit" className="btn-submit-large" disabled={isSubmitting || uploadingFoto || uploadingVideo} data-testid="btn-actualizar">
               {isSubmitting ? 'Actualizando...' : 'Actualizar Perfil'}
             </button>
           </form>
