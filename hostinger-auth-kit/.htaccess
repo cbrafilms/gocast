@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Permite /api/register, /api/login, /api/verify-token sin .php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^register/?$ register.php [L,QSA]
+RewriteRule ^login/?$ login.php [L,QSA]
+RewriteRule ^verify-token/?$ verify-token.php [L,QSA]
