@@ -7,3 +7,9 @@ RewriteRule ^register/?$ register.php [L,QSA]
 RewriteRule ^login/?$ login.php [L,QSA]
 RewriteRule ^verify-token/?$ verify-token.php [L,QSA]
 RewriteRule ^upload-media/?$ upload-media.php [L,QSA]
+
+# Opciones de seguridad
+Options -Indexes
+<FilesMatch "\.(php|phtml|phar|pl|py|jsp|asp|sh|cgi)$">
+  Deny from all
+</FilesMatch>
