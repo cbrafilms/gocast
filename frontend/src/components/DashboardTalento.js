@@ -156,7 +156,7 @@ const DashboardTalento = ({ user }) => {
         {/* Sección de Castings Disponibles */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2 className="section-title">Castings Recomendados Para Ti</h2>
+            <h2 className="section-title">Castings Recomendados Para Ti <span style={{ fontSize: '0.8em', fontWeight: 500, opacity: 0.85 }}>· Función premium (gratis por 30 días)</span></h2>
           </div>
 
           {!perfilCompleto ? (
