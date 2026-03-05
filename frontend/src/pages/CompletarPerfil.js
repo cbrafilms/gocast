@@ -27,7 +27,9 @@ const CompletarPerfil = () => {
     talentos_especiales: '',
     disponibilidad: [],
     fotos: [],
-    videos: []
+    videos: [],
+    contacto_email: '',
+    contacto_whatsapp: ''
   });
   
   const [errors, setErrors] = useState({});
@@ -327,6 +329,17 @@ const CompletarPerfil = () => {
               <div className="form-group">
                 <label className="form-label">Talentos Especiales</label>
                 <textarea name="talentos_especiales" value={formData.talentos_especiales} onChange={handleChange} className="form-input" rows="3" placeholder="Habilidades especiales: canto, baile, artes marciales, idiomas, etc." />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Email de contacto (visible para productoras)</label>
+                  <input type="email" name="contacto_email" value={formData.contacto_email} onChange={handleChange} className="form-input" placeholder="tu@email.com" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">WhatsApp de contacto</label>
+                  <input type="text" name="contacto_whatsapp" value={formData.contacto_whatsapp} onChange={handleChange} className="form-input" placeholder="+56 9 ..." />
+                </div>
               </div>
             </div>
 

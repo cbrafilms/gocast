@@ -44,6 +44,8 @@ try {
       'disponibilidad' => json_decode($p['disponibilidad_json'] ?? '[]', true) ?: [],
       'fotos' => json_decode($p['fotos_json'] ?? '[]', true) ?: [],
       'videos' => json_decode($p['videos_json'] ?? '[]', true) ?: [],
+      'contacto_email' => $p['contacto_email'] ?? '',
+      'contacto_whatsapp' => $p['contacto_whatsapp'] ?? '',
     ]
   ]);
 } catch (Throwable $e) {

@@ -468,7 +468,7 @@ const GestionCasting = () => {
                     {preseleccionados.map((app) => (
                       <div key={app.id} className={`preselect-card ${app.es_backup ? 'is-backup' : ''}`}>
                         <div className="preselect-badge">
-                          {app.es_backup ? 'BACKUP' : 'TITULAR'}
+                          {app.es_backup ? 'BACKUP' : 'PROTAGONISTA'} · {app.rol_nombre || app.talento_perfil?.tipo_talento || 'Rol'}
                         </div>
                         <div className="preselect-avatar">
                           {app.talento_perfil?.nombre_completo?.charAt(0) || '?'}
@@ -480,6 +480,11 @@ const GestionCasting = () => {
                           <p>{app.talento_perfil?.ciudad}</p>
                         </div>
                         
+                        <div className="casting-card-actions" style={{ marginTop: 8 }}>
+                          <button className="btn-primary-small" onClick={() => handlePreseleccionar(app.id, false)}>Marcar protagonista</button>
+                          <button className="btn-secondary-small" onClick={() => handlePreseleccionar(app.id, true)}>Marcar backup</button>
+                        </div>
+
                         {showCreateShortlist && (
                           <label className="select-checkbox">
                             <input 
@@ -651,6 +656,7 @@ const GestionCasting = () => {
                           <p><strong>Rol:</strong> {c.rol_nombre}</p>
                           <p><strong>Estado cliente:</strong> {c.estado_cliente}</p>
                         </div>
+                        <button className="btn-secondary-small" onClick={() => openTalentDetail(c.talento_id)}>Ver perfil completo</button>
                       </div>
                     ))}
                   </div>
@@ -781,6 +787,7 @@ const GestionCasting = () => {
                     <p><strong>Ciudad:</strong> {selectedTalentDetail.perfil?.ciudad}, {selectedTalentDetail.perfil?.pais}</p>
                     <p><strong>Altura:</strong> {selectedTalentDetail.perfil?.altura_cm} cm</p>
                     <p><strong>Descripción:</strong> {selectedTalentDetail.perfil?.descripcion_corta || 'Sin descripción'}</p>
+                    <p><strong>Contacto:</strong> {selectedTalentDetail.perfil?.contacto_email || selectedTalentDetail.user?.email} · {selectedTalentDetail.perfil?.contacto_whatsapp || '-'}</p>
                     {selectedTalentDetail.perfil?.fotos?.length > 0 && (
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                         {selectedTalentDetail.perfil.fotos.map((f, i) => (

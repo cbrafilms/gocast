@@ -35,11 +35,15 @@ function ensure_schema(PDO $pdo): void {
     disponibilidad_json JSON NOT NULL,
     fotos_json JSON NOT NULL,
     videos_json JSON NOT NULL,
+    contacto_email VARCHAR(190) NULL,
+    contacto_whatsapp VARCHAR(60) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_perfil_user (user_id),
     CONSTRAINT fk_perfil_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+  $pdo->exec("ALTER TABLE perfiles_talento ADD COLUMN IF NOT EXISTS contacto_email VARCHAR(190) NULL");
+  $pdo->exec("ALTER TABLE perfiles_talento ADD COLUMN IF NOT EXISTS contacto_whatsapp VARCHAR(60) NULL");
 }
 
 function decode_json_list(?string $json): array {
@@ -82,6 +86,8 @@ try {
       'disponibilidad' => decode_json_list($p['disponibilidad_json']),
       'fotos' => decode_json_list($p['fotos_json']),
       'videos' => decode_json_list($p['videos_json']),
+      'contacto_email' => $p['contacto_email'] ?? '',
+      'contacto_whatsapp' => $p['contacto_whatsapp'] ?? '',
     ]);
   }
 
@@ -117,8 +123,8 @@ try {
     $sql = 'INSERT INTO perfiles_talento (
       user_id, tipo_talento, nombre_completo, edad, ciudad, pais, altura_cm,
       color_pelo, color_ojos, sexo, talla_camisa, talla_pantalon, talla_zapatos,
-      descripcion_corta, talentos_especiales, disponibilidad_json, fotos_json, videos_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      descripcion_corta, talentos_especiales, disponibilidad_json, fotos_json, videos_json, contacto_email, contacto_whatsapp
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       tipo_talento=VALUES(tipo_talento),
       nombre_completo=VALUES(nombre_completo),
@@ -136,7 +142,9 @@ try {
       talentos_especiales=VALUES(talentos_especiales),
       disponibilidad_json=VALUES(disponibilidad_json),
       fotos_json=VALUES(fotos_json),
-      videos_json=VALUES(videos_json)';
+      videos_json=VALUES(videos_json),
+      contacto_email=VALUES(contacto_email),
+      contacto_whatsapp=VALUES(contacto_whatsapp)';
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -158,6 +166,8 @@ try {
       json_encode(array_values($disponibilidad), JSON_UNESCAPED_UNICODE),
       json_encode(array_values($fotos), JSON_UNESCAPED_UNICODE),
       json_encode(array_values($videos), JSON_UNESCAPED_UNICODE),
+      trim((string)($in['contacto_email'] ?? '')) ?: null,
+      trim((string)($in['contacto_whatsapp'] ?? '')) ?: null,
     ]);
 
     $u = $pdo->prepare('UPDATE users SET perfil_completo = 1 WHERE id = ?');

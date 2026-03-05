@@ -59,6 +59,13 @@ try {
     $tal = $tq->fetch();
     if (!$tal || ($tal['tipo_usuario'] ?? '') !== 'talento') json_response(404, ['detail' => 'Talento no encontrado']);
 
+    $exists = $pdo->prepare('SELECT id, estado FROM invitaciones WHERE casting_id = ? AND talento_id = ? AND rol_nombre = ? LIMIT 1');
+    $exists->execute([$castingId, $talentoId, $rol]);
+    $prev = $exists->fetch();
+    if ($prev && ($prev['estado'] ?? '') === 'pendiente') {
+      json_response(409, ['detail' => 'Este talento ya está invitado a ese rol']);
+    }
+
     $stmt = $pdo->prepare('INSERT INTO invitaciones (casting_id, productora_id, productora_nombre, talento_id, talento_nombre, rol_nombre, mensaje, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE mensaje=VALUES(mensaje), estado="pendiente", fecha_respuesta=NULL');
     $stmt->execute([$castingId, (int)$u['id'], (string)$u['nombre'], $talentoId, (string)$tal['nombre'], $rol, $mensaje !== '' ? $mensaje : null, 'pendiente']);
 

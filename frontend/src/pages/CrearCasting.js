@@ -331,8 +331,13 @@ const CrearCasting = () => {
                         <p><strong>Ciudad:</strong> {selectedTalentDetail.perfil?.ciudad}, {selectedTalentDetail.perfil?.pais}</p>
                         <p><strong>Altura:</strong> {selectedTalentDetail.perfil?.altura_cm} cm</p>
                         <p><strong>Descripción:</strong> {selectedTalentDetail.perfil?.descripcion_corta || 'Sin descripción'}</p>
-                        <p><strong>Fotos:</strong> {selectedTalentDetail.perfil?.fotos?.length || 0} / 5</p>
-                        <p><strong>Video principal:</strong> {selectedTalentDetail.perfil?.videos?.[0] ? 'Sí' : 'No'}</p>
+                        <p><strong>Contacto:</strong> {selectedTalentDetail.perfil?.contacto_email || selectedTalentDetail.user?.email} · {selectedTalentDetail.perfil?.contacto_whatsapp || '-'}</p>
+                        {selectedTalentDetail.perfil?.fotos?.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                            {selectedTalentDetail.perfil.fotos.map((f, i) => <img key={i} src={f} alt={`foto-${i}`} style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8 }} />)}
+                          </div>
+                        )}
+                        {selectedTalentDetail.perfil?.videos?.[0] && <div style={{ marginTop: 8 }}><video src={selectedTalentDetail.perfil.videos[0]} controls style={{ width: 260, maxWidth: '100%' }} /></div>}
                       </div>
                     )}
                   </div>
