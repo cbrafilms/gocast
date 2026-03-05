@@ -18,7 +18,9 @@ if (!$payload || empty($payload['sub'])) {
 
 try {
   $pdo = db();
-  $q = $pdo->prepare('SELECT id, nombre, email, tipo_usuario, perfil_completo, activo, created_at FROM users WHERE id = ? LIMIT 1');
+  $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) NULL");
+  $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS reel_url VARCHAR(500) NULL");
+  $q = $pdo->prepare('SELECT id, nombre, email, tipo_usuario, perfil_completo, activo, created_at, logo_url, reel_url FROM users WHERE id = ? LIMIT 1');
   $q->execute([(int)$payload['sub']]);
   $u = $q->fetch();
 
@@ -32,6 +34,8 @@ try {
     'perfil_completo' => (bool)$u['perfil_completo'],
     'activo' => (bool)$u['activo'],
     'fecha_registro' => $u['created_at'],
+    'logo_url' => $u['logo_url'] ?? null,
+    'reel_url' => $u['reel_url'] ?? null,
   ]);
 } catch (Throwable $e) {
   if (APP_ENV !== 'production') {

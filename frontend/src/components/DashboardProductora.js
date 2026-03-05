@@ -172,6 +172,8 @@ const DashboardProductora = ({ user }) => {
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Tipo:</strong> Productora</p>
               <p><strong>Miembro desde:</strong> {user.fecha_registro ? new Date(user.fecha_registro).toLocaleDateString() : '-'}</p>
+              {user.logo_url && <div style={{ marginTop: 10 }}><p><strong>Logo:</strong></p><img src={user.logo_url} alt="logo" style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8 }} /></div>}
+              {user.reel_url && <p><strong>Reel:</strong> <a href={user.reel_url} target="_blank" rel="noreferrer">Ver YouTube</a></p>}
             </div>
           </div>
         </div>

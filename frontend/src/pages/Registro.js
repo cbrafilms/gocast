@@ -13,7 +13,10 @@ const Registro = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    aceptaTerminos: false
+    aceptaTerminos: false,
+    logoUrl: '',
+    reelUrl: '',
+    logoDataUrl: ''
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,6 +32,16 @@ const Registro = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleLogoFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData(prev => ({ ...prev, logoDataUrl: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const validateForm = () => {
@@ -78,7 +91,10 @@ const Registro = () => {
         email: formData.email,
         password: formData.password,
         tipo_usuario: userType,
-        acepta_terminos: formData.aceptaTerminos
+        acepta_terminos: formData.aceptaTerminos,
+        logo_url: formData.logoUrl,
+        reel_url: formData.reelUrl,
+        logo_data_url: formData.logoDataUrl
       });
 
       if (response.data) {
@@ -89,7 +105,10 @@ const Registro = () => {
           email: '',
           password: '',
           confirmPassword: '',
-          aceptaTerminos: false
+          aceptaTerminos: false,
+          logoUrl: '',
+          reelUrl: '',
+          logoDataUrl: ''
         });
         
         // Redirigir a login después de 3 segundos
@@ -211,6 +230,24 @@ const Registro = () => {
               />
               {errors.confirmPassword && <span className="form-error" data-testid="confirm-password-error">{errors.confirmPassword}</span>}
             </div>
+
+            {userType === 'productora' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Logo (subir archivo)</label>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="form-input" onChange={handleLogoFile} />
+                  {formData.logoDataUrl && <img src={formData.logoDataUrl} alt="preview logo" style={{ width: 90, height: 90, objectFit: 'cover', marginTop: 8, borderRadius: 8 }} />}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Logo (URL opcional)</label>
+                  <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleChange} className="form-input" placeholder="https://..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Link reel YouTube</label>
+                  <input type="url" name="reelUrl" value={formData.reelUrl} onChange={handleChange} className="form-input" placeholder="https://youtube.com/..." />
+                </div>
+              </>
+            )}
 
             {/* Checkbox de términos */}
             <div className="form-group-checkbox">

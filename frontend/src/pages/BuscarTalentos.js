@@ -40,6 +40,9 @@ const BuscarTalentos = () => {
   });
   const [inviteSuccess, setInviteSuccess] = useState('');
   const [inviteError, setInviteError] = useState('');
+  const [showPerfilModal, setShowPerfilModal] = useState(false);
+  const [perfilDetalle, setPerfilDetalle] = useState(null);
+  const [loadingPerfil, setLoadingPerfil] = useState(false);
 
   // Cargar castings al montar el componente
   useEffect(() => {
@@ -147,6 +150,22 @@ const BuscarTalentos = () => {
       }, 2000);
     } catch (error) {
       setInviteError(error.response?.data?.detail || 'Error al enviar invitacion');
+    }
+  };
+
+  const openPerfilModal = async (talentoId) => {
+    setShowPerfilModal(true);
+    setLoadingPerfil(true);
+    setPerfilDetalle(null);
+    try {
+      const response = await axios.get(`${API}/talentos/${talentoId}/perfil`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPerfilDetalle(response.data);
+    } catch (error) {
+      setPerfilDetalle(null);
+    } finally {
+      setLoadingPerfil(false);
     }
   };
 
@@ -335,15 +354,55 @@ const BuscarTalentos = () => {
                         </div>
                       )}
                       
-                      <button onClick={() => openInviteModal(talento)} className="btn-invite" data-testid="btn-invitar">
-                        Invitar a Casting
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                        <button onClick={() => openPerfilModal(talento.user_id)} className="btn-secondary-small">
+                          Ver perfil
+                        </button>
+                        <button onClick={() => openInviteModal(talento)} className="btn-invite" data-testid="btn-invitar">
+                          Invitar a Casting
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </>
             ) : null}
           </div>
+
+          {showPerfilModal && (
+            <div className="modal-overlay" onClick={() => setShowPerfilModal(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <h2 className="modal-title">Perfil del talento</h2>
+                {loadingPerfil ? (
+                  <p>Cargando...</p>
+                ) : !perfilDetalle ? (
+                  <p>No se pudo cargar el perfil.</p>
+                ) : (
+                  <div>
+                    <p><strong>Nombre:</strong> {perfilDetalle.user?.nombre}</p>
+                    <p><strong>Email:</strong> {perfilDetalle.user?.email}</p>
+                    <p><strong>Tipo:</strong> {perfilDetalle.perfil?.tipo_talento}</p>
+                    <p><strong>Edad:</strong> {perfilDetalle.perfil?.edad}</p>
+                    <p><strong>Ciudad:</strong> {perfilDetalle.perfil?.ciudad}, {perfilDetalle.perfil?.pais}</p>
+                    <p><strong>Descripción:</strong> {perfilDetalle.perfil?.descripcion_corta}</p>
+                    {perfilDetalle.perfil?.fotos?.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                        {perfilDetalle.perfil.fotos.map((f, i) => <img key={i} src={f} alt={`foto-${i}`} style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8 }} />)}
+                      </div>
+                    )}
+                    {perfilDetalle.perfil?.videos?.[0] && (
+                      <div style={{ marginTop: 10 }}>
+                        <video src={perfilDetalle.perfil.videos[0]} controls style={{ width: 260, maxWidth: '100%', borderRadius: 8 }} />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="modal-actions">
+                  <button onClick={() => setShowPerfilModal(false)} className="btn-secondary">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showInviteModal && (
             <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>

@@ -13,6 +13,8 @@ RewriteRule ^mis-castings/?$ mis-castings.php [L,QSA]
 RewriteRule ^buscar-talentos/?$ buscar-talentos.php [L,QSA]
 RewriteRule ^aplicaciones-recibidas/?$ aplicaciones-recibidas.php [L,QSA]
 RewriteRule ^castings-recomendados/?$ castings-recomendados.php [L,QSA]
+RewriteRule ^auto-match/?$ auto-match.php [L,QSA]
+RewriteRule ^talentos/([0-9]+)/perfil/?$ talento-perfil.php?user_id=$1 [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes
