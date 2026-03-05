@@ -22,6 +22,7 @@ RewriteRule ^aplicaciones/([0-9]+)/preseleccionar/?$ aplicacion-preseleccionar.p
 RewriteRule ^castings/([0-9]+)/preseleccionados/?$ castings-preseleccionados.php?id=$1 [L,QSA]
 RewriteRule ^shortlists/?$ shortlists.php [L,QSA]
 RewriteRule ^castings/([0-9]+)/shortlists/?$ shortlists.php?casting_id=$1 [L,QSA]
+RewriteRule ^shortlist/([A-Za-z0-9_-]+)/?$ shortlist-public.php?url_publica=$1 [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes
