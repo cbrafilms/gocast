@@ -360,8 +360,9 @@ const CompletarPerfil = () => {
                 {errors.fotos && <span className="form-error">{errors.fotos}</span>}
                 <ul>
                   {(formData.fotos || []).map((f, idx) => (
-                    <li key={`${f}-${idx}`}>
-                      {idx === 0 ? '🌟 ' : ''}{f}
+                    <li key={`${f}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <img src={f} alt={`foto-${idx + 1}`} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8 }} />
+                      <span style={{ flex: 1, wordBreak: 'break-all' }}>{idx === 0 ? '🌟 ' : ''}{f}</span>
                       <button type="button" className="btn-secondary-small" onClick={() => removeFoto(idx)} style={{ marginLeft: 8 }}>Eliminar</button>
                     </li>
                   ))}
@@ -379,7 +380,12 @@ const CompletarPerfil = () => {
                 </div>
                 {errors.videos && <span className="form-error">{errors.videos}</span>}
                 <ul>
-                  {(formData.videos || []).map((v, idx) => <li key={`${v}-${idx}`}>{v}</li>)}
+                  {(formData.videos || []).map((v, idx) => (
+                    <li key={`${v}-${idx}`} style={{ marginBottom: 8 }}>
+                      <video src={v} controls style={{ width: 260, maxWidth: '100%', borderRadius: 8 }} />
+                      <div style={{ wordBreak: 'break-all' }}>{v}</div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
