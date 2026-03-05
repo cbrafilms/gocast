@@ -41,56 +41,77 @@ const GestionCasting = () => {
   }, [id, token, user]);
 
   const fetchData = async () => {
+    setErrorMessage('');
     try {
-      // Obtener casting
+      // Casting principal (crítico)
       const castingRes = await axios.get(`${API}/castings/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCasting(castingRes.data);
+    } catch (error) {
+      console.error('Error al cargar casting:', error);
+      setErrorMessage('Error al cargar los datos del casting');
+      setLoading(false);
+      return;
+    }
 
-      // Obtener aplicaciones
+    // Endpoints secundarios (tolerantes a no implementado)
+    try {
       const appsRes = await axios.get(`${API}/aplicaciones-recibidas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const appsCasting = appsRes.data.filter(a => a.casting_id === id);
+      const appsCasting = (appsRes.data || []).filter(a => String(a.casting_id) === String(id));
       setAplicaciones(appsCasting);
+    } catch (_) {
+      setAplicaciones([]);
+    }
 
-      // Obtener preseleccionados
+    try {
       const preRes = await axios.get(`${API}/castings/${id}/preseleccionados`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPreseleccionados(preRes.data);
+      setPreseleccionados(preRes.data || []);
+    } catch (_) {
+      setPreseleccionados([]);
+    }
 
-      // Obtener shortlists
+    try {
       const shortRes = await axios.get(`${API}/castings/${id}/shortlists`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setShortlists(shortRes.data);
+      setShortlists(shortRes.data || []);
+    } catch (_) {
+      setShortlists([]);
+    }
 
-      // Obtener sugeridos automáticos por rol
+    try {
       const sugRes = await axios.get(`${API}/castings/${id}/sugeridos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSugeridosPorRol(sugRes.data?.roles || []);
+    } catch (_) {
+      setSugeridosPorRol([]);
+    }
 
-      // Obtener participantes (invitaciones aceptadas/rechazadas)
+    try {
       const partRes = await axios.get(`${API}/castings/${id}/participantes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParticipantes(partRes.data || []);
+    } catch (_) {
+      setParticipantes([]);
+    }
 
-      // Obtener contratos del casting
+    try {
       const contractRes = await axios.get(`${API}/castings/${id}/contracts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setContracts(contractRes.data || []);
-
-    } catch (error) {
-      console.error('Error al cargar datos:', error);
-      setErrorMessage('Error al cargar datos del casting');
-    } finally {
-      setLoading(false);
+    } catch (_) {
+      setContracts([]);
     }
+
+    setLoading(false);
   };
 
   const handlePreseleccionar = async (aplicacionId, esBackup = false) => {
