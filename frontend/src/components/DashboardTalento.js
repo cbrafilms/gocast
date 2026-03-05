@@ -14,6 +14,7 @@ const DashboardTalento = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [perfilCompleto, setPerfilCompleto] = useState(false);
   const [perfilData, setPerfilData] = useState(null);
+  const [contratos, setContratos] = useState([]);
 
   useEffect(() => {
     if (token) {
@@ -21,6 +22,7 @@ const DashboardTalento = ({ user }) => {
       fetchCastings();
       fetchInvitaciones();
       fetchAplicaciones();
+      fetchContratos();
     }
   }, [token]);
 
@@ -76,6 +78,29 @@ const DashboardTalento = ({ user }) => {
     }
   };
 
+  const fetchContratos = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API}/mis-contratos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContratos(response.data || []);
+    } catch (error) {
+      setContratos([]);
+    }
+  };
+
+  const firmarContrato = async (contractId) => {
+    try {
+      await axios.post(`${API}/contracts/${contractId}/sign`, { accept_terms: true }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchContratos();
+    } catch (error) {
+      console.error('Error al firmar contrato:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     window.location.href = '/';
@@ -127,6 +152,13 @@ const DashboardTalento = ({ user }) => {
             <div className="stat-content">
               <p className="stat-label">Castings Recomendados</p>
               <p className="stat-value">{castings.length}</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">📄</div>
+            <div className="stat-content">
+              <p className="stat-label">Contratos</p>
+              <p className="stat-value">{contratos.length}</p>
             </div>
           </div>
         </div>
@@ -213,6 +245,26 @@ const DashboardTalento = ({ user }) => {
                   <span className="aplicacion-fecha">
                     {new Date(app.fecha_aplicacion).toLocaleDateString()}
                   </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {contratos.length > 0 && (
+          <div className="dashboard-section">
+            <h2 className="section-title">🎉 Seleccionado(a) en casting / Contratos</h2>
+            <div className="aplicaciones-list">
+              {contratos.map((c) => (
+                <div key={c.id} className="aplicacion-item">
+                  <div className="aplicacion-info">
+                    <span className="aplicacion-casting">{c.casting_titulo} · Rol: {c.rol_nombre}</span>
+                    <span className={`aplicacion-estado`}>{c.status}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {c.pdf_url && <a className="btn-secondary-small" href={c.pdf_url} target="_blank" rel="noreferrer">Ver contrato</a>}
+                    <button className="btn-primary-small" onClick={() => firmarContrato(c.id)}>Aceptar y firmar</button>
+                  </div>
                 </div>
               ))}
             </div>

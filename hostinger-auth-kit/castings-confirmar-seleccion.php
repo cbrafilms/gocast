@@ -14,7 +14,7 @@ function auth_productora(PDO $pdo): int {
   $q = $pdo->prepare('SELECT tipo_usuario FROM users WHERE id = ? LIMIT 1');
   $q->execute([$uid]);
   $u = $q->fetch();
-  if (!$u || ($u['tipo_usuario'] ?? '') !== 'productora') json_response(403, ['detail' => 'Solo productoras');
+  if (!$u || ($u['tipo_usuario'] ?? '') !== 'productora') json_response(403, ['detail' => 'Solo productoras']);
   return $uid;
 }
 
@@ -29,9 +29,11 @@ try {
     rol_nombre VARCHAR(120) NOT NULL,
     status VARCHAR(40) NOT NULL DEFAULT 'draft',
     pdf_url VARCHAR(500) NULL,
+    signatures_json JSON NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_contract_role (casting_id, talento_id, rol_nombre)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+  $pdo->exec("ALTER TABLE contracts ADD COLUMN IF NOT EXISTS signatures_json JSON NULL");
 
   $q = $pdo->prepare('SELECT id FROM castings WHERE id = ? AND productora_id = ? LIMIT 1');
   $q->execute([$castingId, $pid]);

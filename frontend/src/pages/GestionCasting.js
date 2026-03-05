@@ -354,6 +354,12 @@ const GestionCasting = () => {
               Participantes ({participantes.length})
             </button>
             <button 
+              className={`tab-btn ${activeTab === 'seleccionados' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('seleccionados')}
+            >
+              Seleccionados ({contracts.length})
+            </button>
+            <button 
               className={`tab-btn ${activeTab === 'contratos' ? 'tab-active' : ''}`}
               onClick={() => setActiveTab('contratos')}
             >
@@ -599,6 +605,28 @@ const GestionCasting = () => {
                           >
                             {p.is_backup ? 'Quitar backup' : 'Marcar backup'}
                           </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Seleccionados */}
+            {activeTab === 'seleccionados' && (
+              <div className="shortlists-section">
+                <h2 className="section-title">Seleccionados por cliente</h2>
+                {contracts.length === 0 ? (
+                  <div className="empty-state"><p className="empty-title">Aún no hay seleccionados</p></div>
+                ) : (
+                  <div className="shortlists-list">
+                    {contracts.map((c) => (
+                      <div key={`sel-${c.id}`} className="shortlist-card">
+                        <div className="shortlist-info">
+                          <h3>{c.talento_nombre}</h3>
+                          <p><strong>Rol:</strong> {c.rol_nombre}</p>
+                          <p><strong>Estado:</strong> {c.status}</p>
                         </div>
                       </div>
                     ))}
