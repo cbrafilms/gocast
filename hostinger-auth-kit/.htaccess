@@ -10,6 +10,3 @@ RewriteRule ^upload-media/?$ upload-media.php [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes
-<FilesMatch "\.(php|phtml|phar|pl|py|jsp|asp|sh|cgi)$">
-  Deny from all
-</FilesMatch>
