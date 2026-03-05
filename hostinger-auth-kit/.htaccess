@@ -18,6 +18,8 @@ RewriteRule ^talentos/([0-9]+)/perfil/?$ talento-perfil.php?user_id=$1 [L,QSA]
 RewriteRule ^castings/([0-9]+)/?$ casting-detalle.php?id=$1 [L,QSA]
 RewriteRule ^aplicaciones/?$ aplicaciones.php [L,QSA]
 RewriteRule ^mis-aplicaciones/?$ aplicaciones.php [L,QSA]
+RewriteRule ^aplicaciones/([0-9]+)/preseleccionar/?$ aplicacion-preseleccionar.php?id=$1 [L,QSA]
+RewriteRule ^castings/([0-9]+)/preseleccionados/?$ castings-preseleccionados.php?id=$1 [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes
