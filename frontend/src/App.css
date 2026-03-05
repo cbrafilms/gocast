@@ -3031,3 +3031,63 @@ body {
     flex-direction: column;
   }
 }
+
+/* ===========================
+   UI REFINEMENT PHASE 1
+   =========================== */
+:root {
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 30px rgba(2, 8, 23, 0.08);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.gocast-container {
+  max-width: 1240px;
+}
+
+.dashboard-section,
+.perfil-card,
+.shortlist-card,
+.casting-card,
+.modal-content,
+.error-card,
+.success-card {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.btn-primary,
+.btn-submit,
+.btn-submit-large,
+.btn-primary-small,
+.btn-invite,
+.btn-invite-small {
+  border-radius: 999px !important;
+  font-weight: 700;
+}
+
+.btn-secondary,
+.btn-secondary-small,
+.btn-copy,
+.btn-backup,
+.btn-preselect,
+.btn-logout,
+.collapse-toggle-btn {
+  border-radius: 999px !important;
+}
+
+.section-title {
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+  .gocast-container { padding: 0 1rem; }
+  .gocast-header { position: static; }
+}
