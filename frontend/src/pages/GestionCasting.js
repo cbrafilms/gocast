@@ -29,6 +29,7 @@ const GestionCasting = () => {
   const [selectedForShortlist, setSelectedForShortlist] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [contratoDetalle, setContratoDetalle] = useState(null);
 
   useEffect(() => {
     if (!user || user.tipo_usuario !== 'productora') {
@@ -254,6 +255,17 @@ const GestionCasting = () => {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       setErrorMessage(error.response?.data?.detail || 'Error al generar link privado');
+    }
+  };
+
+  const verContrato = async (contractId) => {
+    try {
+      const response = await axios.get(`${API}/contracts/${contractId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContratoDetalle(response.data);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al abrir contrato');
     }
   };
 
@@ -669,7 +681,10 @@ const GestionCasting = () => {
                           <p><strong>Estado:</strong> {c.status}</p>
                           <p><strong>Firmas:</strong> {(c.signatures || []).length}/2</p>
                         </div>
-                        {c.pdf_url && <a className="btn-copy" href={c.pdf_url} target="_blank" rel="noreferrer">Ver PDF</a>}
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button className="btn-secondary-small" onClick={() => verContrato(c.id)}>Ver contrato</button>
+                          {c.pdf_url && <a className="btn-copy" href={c.pdf_url} target="_blank" rel="noreferrer">Descargar PDF</a>}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -713,6 +728,20 @@ const GestionCasting = () => {
               </div>
             )}
           </div>
+
+          {contratoDetalle && (
+            <div className="modal-overlay" onClick={() => setContratoDetalle(null)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3>Contrato · {contratoDetalle.casting_titulo}</h3>
+                <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{contratoDetalle.texto}</pre>
+                <p><strong>Estado:</strong> {contratoDetalle.status}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <a className="btn-secondary" href={contratoDetalle.pdf_url} target="_blank" rel="noreferrer">Descargar PDF</a>
+                  <button className="btn-secondary" onClick={() => setContratoDetalle(null)}>Cerrar</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showTalentModal && (
             <div className="modal-overlay" onClick={closeTalentDetail}>

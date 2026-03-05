@@ -15,6 +15,7 @@ const DashboardTalento = ({ user }) => {
   const [perfilCompleto, setPerfilCompleto] = useState(false);
   const [perfilData, setPerfilData] = useState(null);
   const [contratos, setContratos] = useState([]);
+  const [contratoDetalle, setContratoDetalle] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -90,12 +91,26 @@ const DashboardTalento = ({ user }) => {
     }
   };
 
+  const verContrato = async (contractId) => {
+    try {
+      const response = await axios.get(`${API}/contracts/${contractId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContratoDetalle(response.data);
+    } catch (error) {
+      console.error('Error al ver contrato:', error);
+    }
+  };
+
   const firmarContrato = async (contractId) => {
     try {
       await axios.post(`${API}/contracts/${contractId}/sign`, { accept_terms: true }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchContratos();
+      if (contratoDetalle && String(contratoDetalle.id) === String(contractId)) {
+        verContrato(contractId);
+      }
     } catch (error) {
       console.error('Error al firmar contrato:', error);
     }
@@ -262,11 +277,27 @@ const DashboardTalento = ({ user }) => {
                     <span className={`aplicacion-estado`}>{c.status}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {c.pdf_url && <a className="btn-secondary-small" href={c.pdf_url} target="_blank" rel="noreferrer">Ver contrato</a>}
+                    <button className="btn-secondary-small" onClick={() => verContrato(c.id)}>Ver contrato</button>
+                    {c.pdf_url && <a className="btn-secondary-small" href={c.pdf_url} target="_blank" rel="noreferrer">Descargar PDF</a>}
                     <button className="btn-primary-small" onClick={() => firmarContrato(c.id)}>Aceptar y firmar</button>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {contratoDetalle && (
+          <div className="modal-overlay" onClick={() => setContratoDetalle(null)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Contrato · {contratoDetalle.casting_titulo}</h3>
+              <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{contratoDetalle.texto}</pre>
+              <p><strong>Estado:</strong> {contratoDetalle.status}</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <a className="btn-secondary" href={contratoDetalle.pdf_url} target="_blank" rel="noreferrer">Descargar PDF</a>
+                <button className="btn-primary" onClick={() => firmarContrato(contratoDetalle.id)}>Aceptar y firmar</button>
+                <button className="btn-secondary" onClick={() => setContratoDetalle(null)}>Cerrar</button>
+              </div>
             </div>
           </div>
         )}

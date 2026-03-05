@@ -20,7 +20,7 @@ try {
   $rows = $q->fetchAll() ?: [];
   $out = array_map(fn($r) => [
     'id' => (string)$r['id'], 'casting_id' => (string)$r['casting_id'], 'casting_titulo' => $r['casting_titulo'],
-    'rol_nombre' => $r['rol_nombre'], 'status' => $r['status'], 'pdf_url' => $r['pdf_url'],
+    'rol_nombre' => $r['rol_nombre'], 'status' => $r['status'], 'pdf_url' => ($r['pdf_url'] ?: ('/api/contracts/' . $r['id'] . '/pdf')),
     'signatures' => json_decode($r['signatures_json'] ?? '[]', true) ?: [], 'created_at' => $r['created_at']
   ], $rows);
   json_response(200, $out);
