@@ -375,6 +375,12 @@ const GestionCasting = () => {
                           {app.mensaje && <p className="aplicacion-mensaje">"{app.mensaje}"</p>}
                         </div>
                         <div className="aplicacion-actions">
+                          <button
+                            onClick={() => openTalentDetail(app.talento_id)}
+                            className="btn-secondary-small"
+                          >
+                            Ver perfil
+                          </button>
                           <button 
                             onClick={() => handlePreseleccionar(app.id, false)}
                             className="btn-preselect"
@@ -685,8 +691,18 @@ const GestionCasting = () => {
                     <p><strong>Ciudad:</strong> {selectedTalentDetail.perfil?.ciudad}, {selectedTalentDetail.perfil?.pais}</p>
                     <p><strong>Altura:</strong> {selectedTalentDetail.perfil?.altura_cm} cm</p>
                     <p><strong>Descripción:</strong> {selectedTalentDetail.perfil?.descripcion_corta || 'Sin descripción'}</p>
-                    <p><strong>Fotos:</strong> {selectedTalentDetail.perfil?.fotos?.length || 0} / 5</p>
-                    <p><strong>Video principal:</strong> {selectedTalentDetail.perfil?.videos?.[0] ? 'Sí' : 'No'}</p>
+                    {selectedTalentDetail.perfil?.fotos?.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                        {selectedTalentDetail.perfil.fotos.map((f, i) => (
+                          <img key={i} src={f} alt={`foto-${i}`} style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8 }} />
+                        ))}
+                      </div>
+                    )}
+                    {selectedTalentDetail.perfil?.videos?.[0] && (
+                      <div style={{ marginTop: 10 }}>
+                        <video src={selectedTalentDetail.perfil.videos[0]} controls style={{ width: 280, maxWidth: '100%', borderRadius: 8 }} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
