@@ -28,10 +28,14 @@ RewriteRule ^shortlist/([A-Za-z0-9_-]+)/finalizar/?$ shortlist-finalizar.php?url
 RewriteRule ^castings/([0-9]+)/confirmar-seleccion/?$ castings-confirmar-seleccion.php?id=$1 [L,QSA]
 RewriteRule ^castings/([0-9]+)/avisar-talentos/?$ castings-avisar-talentos.php?id=$1 [L,QSA]
 RewriteRule ^castings/([0-9]+)/contracts/?$ castings-contracts.php?id=$1 [L,QSA]
+RewriteRule ^castings/([0-9]+)/participantes/?$ castings-participantes.php?id=$1 [L,QSA]
 RewriteRule ^mis-contratos/?$ mis-contratos.php [L,QSA]
 RewriteRule ^contracts/([0-9]+)/sign/?$ contracts-sign.php?id=$1 [L,QSA]
 RewriteRule ^contracts/([0-9]+)/?$ contract-detail.php?id=$1 [L,QSA]
 RewriteRule ^contracts/([0-9]+)/pdf/?$ contracts-pdf.php?id=$1 [L,QSA]
+RewriteRule ^invitaciones/?$ invitaciones.php [L,QSA]
+RewriteRule ^mis-invitaciones/?$ invitaciones.php [L,QSA]
+RewriteRule ^invitaciones/([0-9]+)/responder/?$ invitacion-responder.php?id=$1 [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes
