@@ -15,18 +15,18 @@ const Header = () => {
           </Link>
           
           <nav className="gocast-nav">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/quienes-somos" className="nav-link">Quiénes Somos</Link>
-            <Link to="/faq" className="nav-link">FAQ</Link>
-            <Link to="/precios" className="nav-link">Precios</Link>
-            
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                <Link to="/plan-actual" className="nav-link">Plan actual</Link>
                 <span className="nav-user">👤 {user?.nombre}</span>
               </>
             ) : (
               <>
+                <Link to="/" className="nav-link">Home</Link>
+                <Link to="/quienes-somos" className="nav-link">Quiénes Somos</Link>
+                <Link to="/faq" className="nav-link">FAQ</Link>
+                <Link to="/precios" className="nav-link">Precios</Link>
                 <Link to="/login" className="nav-link">Iniciar Sesión</Link>
                 <Link to="/registro" className="nav-link-button">Registro</Link>
               </>

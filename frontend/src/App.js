@@ -19,6 +19,7 @@ import BuscarTalentos from "@/pages/BuscarTalentos";
 import GestionCasting from "@/pages/GestionCasting";
 import VerShortlist from "@/pages/VerShortlist";
 import ClienteCasting from "@/pages/ClienteCasting";
+import PlanActual from "@/pages/PlanActual";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
               <Route path="/gestionar-casting/:id" element={<GestionCasting />} />
               <Route path="/ver-shortlist/:urlPublica" element={<VerShortlist />} />
               <Route path="/cliente/casting/:token" element={<ClienteCasting />} />
+              <Route path="/plan-actual" element={<PlanActual />} />
             </Routes>
           </Layout>
         </AuthProvider>
