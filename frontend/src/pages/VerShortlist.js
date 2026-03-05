@@ -35,13 +35,18 @@ const VerShortlist = () => {
     return map;
   }, [shortlist]);
 
-  const saveSelection = async (rol, principalId, backupId) => {
+  const saveSelection = async (rol, principalId) => {
     await axios.post(`${API}/shortlist/${urlPublica}/seleccion`, {
       rol_nombre: rol,
       principal_talento_id: principalId || null,
-      backup_talento_id: backupId || null,
     });
     fetchShortlist();
+  };
+
+  const finalizarSeleccion = async () => {
+    await axios.post(`${API}/shortlist/${urlPublica}/finalizar`, {});
+    fetchShortlist();
+    alert('Selección enviada a la productora ✅');
   };
 
   if (loading) return <div className="gocast-page"><div className="gocast-container"><p>Cargando shortlist...</p></div></div>;
@@ -57,12 +62,18 @@ const VerShortlist = () => {
             <p className="shortlist-casting">Casting: {shortlist?.casting_titulo}</p>
           </div>
 
+          {shortlist?.cliente_finalizado && (
+            <div className="success-message" style={{ marginBottom: 12 }}>
+              Selección final enviada a la productora.
+            </div>
+          )}
+
           {Object.entries(groupedByRole).map(([rol, talentos]) => {
             const sel = shortlist?.cliente_seleccion?.[rol] || {};
             return (
               <div key={rol} className="shortlist-section">
                 <h2 className="shortlist-section-title">Rol: {rol}</h2>
-                <p style={{ marginBottom: 12 }}>Selecciona 1 principal y 1 backup para este rol.</p>
+                <p style={{ marginBottom: 12 }}>Selecciona el talento principal para este rol.</p>
 
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {talentos.map((talento, idx) => (
@@ -79,10 +90,7 @@ const VerShortlist = () => {
 
                         <div style={{ marginTop: 10, display: 'grid', gap: 6 }}>
                           <label>
-                            <input type="radio" name={`principal-${rol}`} checked={String(sel.principal_talento_id || '') === String(talento.talento_id)} onChange={() => saveSelection(rol, talento.talento_id, sel.backup_talento_id)} /> Principal
-                          </label>
-                          <label>
-                            <input type="radio" name={`backup-${rol}`} checked={String(sel.backup_talento_id || '') === String(talento.talento_id)} onChange={() => saveSelection(rol, sel.principal_talento_id, talento.talento_id)} /> Backup
+                            <input type="radio" name={`principal-${rol}`} checked={String(sel.principal_talento_id || '') === String(talento.talento_id)} onChange={() => saveSelection(rol, talento.talento_id)} /> Principal
                           </label>
                         </div>
                       </div>
@@ -92,6 +100,12 @@ const VerShortlist = () => {
               </div>
             );
           })}
+
+          {!shortlist?.cliente_finalizado && (
+            <div style={{ marginTop: 16 }}>
+              <button className="btn-primary" onClick={finalizarSeleccion}>Finalizar selección y avisar productora</button>
+            </div>
+          )}
 
           {!!selectedTalent && (
             <div className="modal-overlay" onClick={() => setSelectedTalent(null)}>

@@ -273,6 +273,18 @@ const GestionCasting = () => {
     }
   };
 
+  const avisarTalentos = async () => {
+    try {
+      const response = await axios.post(`${API}/castings/${id}/avisar-talentos`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccessMessage(`Aviso enviado a ${response.data?.sent || 0} talento(s)`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.detail || 'Error al avisar talentos');
+    }
+  };
+
   if (!user || user.tipo_usuario !== 'productora') {
     return (
       <div className="gocast-page">
@@ -607,6 +619,9 @@ const GestionCasting = () => {
                     <button className="btn-secondary" onClick={() => confirmarSeleccion(true)}>
                       Confirmar selección (contrato propio)
                     </button>
+                    <button className="btn-primary" onClick={avisarTalentos}>
+                      Avisar a talentos
+                    </button>
                   </div>
                 </div>
 
@@ -651,6 +666,7 @@ const GestionCasting = () => {
                         <div className="shortlist-info">
                           <h3>{sl.nombre}</h3>
                           <p>{sl.talentos.length} talento(s) incluidos</p>
+                          {sl.cliente_finalizado && <p style={{ color: '#16a34a', fontWeight: 700 }}>✅ Cliente ya seleccionó</p>}
                           <p className="shortlist-date">Creado: {new Date(sl.fecha_creacion).toLocaleDateString()}</p>
                         </div>
                         <div className="shortlist-url">

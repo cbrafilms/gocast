@@ -24,6 +24,9 @@ RewriteRule ^shortlists/?$ shortlists.php [L,QSA]
 RewriteRule ^castings/([0-9]+)/shortlists/?$ shortlists.php?casting_id=$1 [L,QSA]
 RewriteRule ^shortlist/([A-Za-z0-9_-]+)/?$ shortlist-public.php?url_publica=$1 [L,QSA]
 RewriteRule ^shortlist/([A-Za-z0-9_-]+)/seleccion/?$ shortlist-select.php?url_publica=$1 [L,QSA]
+RewriteRule ^shortlist/([A-Za-z0-9_-]+)/finalizar/?$ shortlist-finalizar.php?url_publica=$1 [L,QSA]
+RewriteRule ^castings/([0-9]+)/confirmar-seleccion/?$ castings-confirmar-seleccion.php?id=$1 [L,QSA]
+RewriteRule ^castings/([0-9]+)/avisar-talentos/?$ castings-avisar-talentos.php?id=$1 [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes

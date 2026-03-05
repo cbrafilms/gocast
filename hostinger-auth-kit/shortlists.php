@@ -26,12 +26,16 @@ try {
     nombre VARCHAR(200) NOT NULL,
     url_publica VARCHAR(80) NOT NULL,
     talentos_json JSON NOT NULL,
+    cliente_seleccion_json JSON NULL,
+    cliente_finalizado TINYINT(1) NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_shortlist_url (url_publica),
     KEY idx_shortlist_casting (casting_id),
     CONSTRAINT fk_shortlist_casting FOREIGN KEY (casting_id) REFERENCES castings(id) ON DELETE CASCADE,
     CONSTRAINT fk_shortlist_user FOREIGN KEY (productora_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+  $pdo->exec("ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS cliente_seleccion_json JSON NULL");
+  $pdo->exec("ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS cliente_finalizado TINYINT(1) NOT NULL DEFAULT 0");
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $in = get_json_input();
@@ -65,7 +69,7 @@ try {
     $castingId = (int)($_GET['casting_id'] ?? 0);
     if ($castingId <= 0) json_response(400, ['detail' => 'casting_id inválido']);
 
-    $q = $pdo->prepare('SELECT id, nombre, url_publica, talentos_json, fecha_creacion FROM shortlists WHERE casting_id = ? AND productora_id = ? ORDER BY id DESC');
+    $q = $pdo->prepare('SELECT id, nombre, url_publica, talentos_json, cliente_seleccion_json, cliente_finalizado, fecha_creacion FROM shortlists WHERE casting_id = ? AND productora_id = ? ORDER BY id DESC');
     $q->execute([$castingId, $productoraId]);
     $rows = $q->fetchAll() ?: [];
 
@@ -75,6 +79,8 @@ try {
         'nombre' => $r['nombre'],
         'url_publica' => $r['url_publica'],
         'talentos' => json_decode($r['talentos_json'] ?? '[]', true) ?: [],
+        'cliente_seleccion' => json_decode($r['cliente_seleccion_json'] ?? '{}', true) ?: new stdClass(),
+        'cliente_finalizado' => (bool)$r['cliente_finalizado'],
         'fecha_creacion' => $r['fecha_creacion'],
       ];
     }, $rows);
