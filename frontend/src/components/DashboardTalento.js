@@ -13,6 +13,7 @@ const DashboardTalento = ({ user }) => {
   const [aplicaciones, setAplicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [perfilCompleto, setPerfilCompleto] = useState(false);
+  const [perfilData, setPerfilData] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -26,11 +27,13 @@ const DashboardTalento = ({ user }) => {
   const checkPerfil = async () => {
     if (!token) return;
     try {
-      await axios.get(`${API}/perfil-talento`, {
+      const response = await axios.get(`${API}/perfil-talento`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      setPerfilData(response.data);
       setPerfilCompleto(true);
     } catch (error) {
+      setPerfilData(null);
       setPerfilCompleto(false);
     }
   };
@@ -225,7 +228,19 @@ const DashboardTalento = ({ user }) => {
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Tipo:</strong> Talento</p>
               <p><strong>Estado del Perfil:</strong> {perfilCompleto ? '✅ Completo' : '⚠️ Incompleto'}</p>
-              <p><strong>Miembro desde:</strong> {new Date(user.fecha_registro).toLocaleDateString()}</p>
+              <p><strong>Miembro desde:</strong> {user.fecha_registro ? new Date(user.fecha_registro).toLocaleDateString() : '-'}</p>
+              {perfilData?.fotos?.[0] && (
+                <div style={{ marginTop: 10 }}>
+                  <p><strong>Foto principal:</strong></p>
+                  <img src={perfilData.fotos[0]} alt="foto principal" style={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 10 }} />
+                </div>
+              )}
+              {perfilData?.videos?.[0] && (
+                <div style={{ marginTop: 10 }}>
+                  <p><strong>Video principal:</strong></p>
+                  <video src={perfilData.videos[0]} controls style={{ width: 220, maxWidth: '100%', borderRadius: 10 }} />
+                </div>
+              )}
             </div>
             <Link to="/editar-perfil" className="btn-primary-small">Editar Perfil</Link>
           </div>

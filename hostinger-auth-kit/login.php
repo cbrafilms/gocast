@@ -16,7 +16,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
 
 try {
   $pdo = db();
-  $q = $pdo->prepare('SELECT id, nombre, email, password_hash, tipo_usuario, perfil_completo, activo FROM users WHERE email = ? LIMIT 1');
+  $q = $pdo->prepare('SELECT id, nombre, email, password_hash, tipo_usuario, perfil_completo, activo, created_at FROM users WHERE email = ? LIMIT 1');
   $q->execute([$email]);
   $u = $q->fetch();
 
@@ -39,6 +39,7 @@ try {
       'tipo_usuario' => $u['tipo_usuario'],
       'perfil_completo' => (bool)$u['perfil_completo'],
       'activo' => (bool)$u['activo'],
+      'fecha_registro' => $u['created_at'],
     ]
   ]);
 } catch (Throwable $e) {

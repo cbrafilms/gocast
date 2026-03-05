@@ -8,6 +8,11 @@ RewriteRule ^login/?$ login.php [L,QSA]
 RewriteRule ^verify-token/?$ verify-token.php [L,QSA]
 RewriteRule ^upload-media/?$ upload-media.php [L,QSA]
 RewriteRule ^perfil-talento/?$ perfil-talento.php [L,QSA]
+RewriteRule ^castings/?$ castings.php [L,QSA]
+RewriteRule ^mis-castings/?$ mis-castings.php [L,QSA]
+RewriteRule ^buscar-talentos/?$ buscar-talentos.php [L,QSA]
+RewriteRule ^aplicaciones-recibidas/?$ aplicaciones-recibidas.php [L,QSA]
+RewriteRule ^castings-recomendados/?$ castings-recomendados.php [L,QSA]
 
 # Opciones de seguridad
 Options -Indexes

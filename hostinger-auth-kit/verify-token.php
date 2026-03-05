@@ -18,7 +18,7 @@ if (!$payload || empty($payload['sub'])) {
 
 try {
   $pdo = db();
-  $q = $pdo->prepare('SELECT id, nombre, email, tipo_usuario, perfil_completo, activo FROM users WHERE id = ? LIMIT 1');
+  $q = $pdo->prepare('SELECT id, nombre, email, tipo_usuario, perfil_completo, activo, created_at FROM users WHERE id = ? LIMIT 1');
   $q->execute([(int)$payload['sub']]);
   $u = $q->fetch();
 
@@ -31,6 +31,7 @@ try {
     'tipo_usuario' => $u['tipo_usuario'],
     'perfil_completo' => (bool)$u['perfil_completo'],
     'activo' => (bool)$u['activo'],
+    'fecha_registro' => $u['created_at'],
   ]);
 } catch (Throwable $e) {
   if (APP_ENV !== 'production') {

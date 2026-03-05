@@ -171,7 +171,7 @@ const DashboardProductora = ({ user }) => {
               <p><strong>Nombre:</strong> {user.nombre}</p>
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Tipo:</strong> Productora</p>
-              <p><strong>Miembro desde:</strong> {new Date(user.fecha_registro).toLocaleDateString()}</p>
+              <p><strong>Miembro desde:</strong> {user.fecha_registro ? new Date(user.fecha_registro).toLocaleDateString() : '-'}</p>
             </div>
           </div>
         </div>
