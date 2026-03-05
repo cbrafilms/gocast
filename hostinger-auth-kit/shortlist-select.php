@@ -32,6 +32,19 @@ try {
   if ($estado === 'none') {
     unset($sel[$rol]['states'][$talentoId]);
   } else {
+    // mantener máximo 1 principal y 1 backup por rol
+    if (in_array($estado, ['principal','backup'], true)) {
+      foreach ($sel[$rol]['states'] as $tid => $st) {
+        if ($st === $estado && (string)$tid !== (string)$talentoId) {
+          unset($sel[$rol]['states'][$tid]);
+        }
+      }
+      // evitar que el mismo talento quede principal y backup a la vez
+      $other = $estado === 'principal' ? 'backup' : 'principal';
+      if (($sel[$rol]['states'][$talentoId] ?? null) === $other) {
+        unset($sel[$rol]['states'][$talentoId]);
+      }
+    }
     $sel[$rol]['states'][$talentoId] = $estado;
   }
   $sel[$rol]['updated_at'] = gmdate('c');
