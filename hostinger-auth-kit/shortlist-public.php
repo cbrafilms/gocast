@@ -10,7 +10,9 @@ if ($url === '') json_response(400, ['detail' => 'url_publica inválida']);
 try {
   $pdo = db();
 
-  $q = $pdo->prepare('SELECT s.id, s.nombre, s.url_publica, s.talentos_json, s.fecha_creacion, c.titulo AS casting_titulo
+  $pdo->exec("ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS cliente_seleccion_json JSON NULL");
+
+  $q = $pdo->prepare('SELECT s.id, s.nombre, s.url_publica, s.talentos_json, s.cliente_seleccion_json, s.fecha_creacion, c.titulo AS casting_titulo
                       FROM shortlists s
                       INNER JOIN castings c ON c.id = s.casting_id
                       WHERE s.url_publica = ?
@@ -56,6 +58,9 @@ try {
     }
   }
 
+  $clienteSel = json_decode($s['cliente_seleccion_json'] ?? '{}', true);
+  if (!is_array($clienteSel)) $clienteSel = [];
+
   json_response(200, [
     'id' => (string)$s['id'],
     'nombre' => $s['nombre'],
@@ -63,6 +68,7 @@ try {
     'casting_titulo' => $s['casting_titulo'],
     'fecha_creacion' => $s['fecha_creacion'],
     'talentos' => $resultTalentos,
+    'cliente_seleccion' => $clienteSel,
   ]);
 } catch (Throwable $e) {
   if (APP_ENV !== 'production') json_response(500, ['detail' => $e->getMessage()]);
