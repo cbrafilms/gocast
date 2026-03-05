@@ -16,6 +16,8 @@ const DashboardTalento = ({ user }) => {
   const [perfilData, setPerfilData] = useState(null);
   const [contratos, setContratos] = useState([]);
   const [contratoDetalle, setContratoDetalle] = useState(null);
+  const [showInvitaciones, setShowInvitaciones] = useState(true);
+  const [showRecomendados, setShowRecomendados] = useState(true);
 
   useEffect(() => {
     if (token) {
@@ -178,35 +180,50 @@ const DashboardTalento = ({ user }) => {
           </div>
         </div>
 
-        {/* Invitaciones Pendientes */}
-        {invitacionesPendientes.length > 0 && (
-          <div className="dashboard-section invitaciones-section">
-            <h2 className="section-title">📧 Invitaciones Pendientes</h2>
-            <div className="invitaciones-grid">
-              {invitacionesPendientes.map((inv) => (
-                <div key={inv.id} className="invitacion-card-small" data-testid="invitacion-card">
-                  <div className="invitacion-header">
-                    <h3 className="invitacion-titulo">{inv.casting_titulo}</h3>
-                    <span className="invitacion-rol">Rol: {inv.rol_nombre}</span>
-                  </div>
-                  <p className="invitacion-productora">De: {inv.productora_nombre}</p>
-                  {inv.mensaje && <p className="invitacion-mensaje">"{inv.mensaje}"</p>}
-                  <Link to={`/casting/${inv.casting_id}`} className="btn-primary-small">
-                    Ver y Responder
-                  </Link>
-                </div>
-              ))}
-            </div>
+        {/* Invitaciones recibidas */}
+        <div className="dashboard-section invitaciones-section">
+          <div className="section-header">
+            <h2 className="section-title">📧 Invitaciones recibidas</h2>
+            <button className="btn-secondary-small" onClick={() => setShowInvitaciones(v => !v)}>
+              {showInvitaciones ? 'Ocultar' : 'Mostrar'}
+            </button>
           </div>
-        )}
+
+          {showInvitaciones && (
+            invitacionesPendientes.length > 0 ? (
+              <div className="invitaciones-grid">
+                {invitacionesPendientes.map((inv) => (
+                  <div key={inv.id} className="invitacion-card-small" data-testid="invitacion-card">
+                    <div className="invitacion-header">
+                      <h3 className="invitacion-titulo">{inv.casting_titulo}</h3>
+                      <span className="invitacion-rol">Rol: {inv.rol_nombre}</span>
+                    </div>
+                    <p className="invitacion-productora">De: {inv.productora_nombre}</p>
+                    {inv.mensaje && <p className="invitacion-mensaje">"{inv.mensaje}"</p>}
+                    <Link to={`/casting/${inv.casting_id}`} className="btn-primary-small">
+                      Ver y Responder
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p className="empty-title">No tienes invitaciones pendientes</p>
+              </div>
+            )
+          )}
+        </div>
 
         {/* Sección de Castings Disponibles */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2 className="section-title">Castings Recomendados Para Ti <span style={{ fontSize: '0.8em', fontWeight: 500, opacity: 0.85 }}>· Función premium (gratis por 30 días)</span></h2>
+            <h2 className="section-title">Castings recomendados para ti <span style={{ fontSize: '0.8em', fontWeight: 500, opacity: 0.85 }}>· Función premium (gratis por 30 días)</span></h2>
+            <button className="btn-secondary-small" onClick={() => setShowRecomendados(v => !v)}>
+              {showRecomendados ? 'Ocultar' : 'Mostrar'}
+            </button>
           </div>
 
-          {!perfilCompleto ? (
+          {showRecomendados && (!perfilCompleto ? (
             <div className="empty-state">
               <p className="empty-icon">📋</p>
               <p className="empty-title">Completa tu perfil para ver castings</p>
@@ -240,7 +257,7 @@ const DashboardTalento = ({ user }) => {
                 </div>
               ))}
             </div>
-          )}
+          ))}
         </div>
 
         {/* Mis Aplicaciones */}
