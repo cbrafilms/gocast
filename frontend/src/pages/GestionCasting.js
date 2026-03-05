@@ -19,6 +19,7 @@ const GestionCasting = () => {
   const [participantes, setParticipantes] = useState([]);
   const [shareUrlCliente, setShareUrlCliente] = useState('');
   const [contracts, setContracts] = useState([]);
+  const [seleccionadosCliente, setSeleccionadosCliente] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('aplicaciones');
   const [showTalentModal, setShowTalentModal] = useState(false);
@@ -112,6 +113,15 @@ const GestionCasting = () => {
       setContracts([]);
     }
 
+    try {
+      const selRes = await axios.get(`${API}/castings/${id}/seleccionados`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSeleccionadosCliente(selRes.data || []);
+    } catch (_) {
+      setSeleccionadosCliente([]);
+    }
+
     setLoading(false);
   };
 
@@ -151,7 +161,7 @@ const GestionCasting = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setSuccessMessage(`Shortlist creado! URL: ${BACKEND_URL}/shortlist/${response.data.url_publica}`);
+      setSuccessMessage(`Shortlist creado. URL: ${window.location.origin}/ver-shortlist/${response.data.url_publica} · Clave: ${response.data.cliente_access_password}`);
       setShowCreateShortlist(false);
       setShortlistName('');
       setSelectedForShortlist([]);
@@ -177,10 +187,11 @@ const GestionCasting = () => {
     });
   };
 
-  const copyShortlistUrl = (urlPublica) => {
+  const copyShortlistUrl = (urlPublica, password) => {
     const fullUrl = `${window.location.origin}/ver-shortlist/${urlPublica}`;
-    navigator.clipboard.writeText(fullUrl);
-    setSuccessMessage('URL copiada al portapapeles!');
+    const text = `URL: ${fullUrl}\nContraseña: ${password || '(sin contraseña)'}`;
+    navigator.clipboard.writeText(text);
+    setSuccessMessage('URL + contraseña copiadas al portapapeles');
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
@@ -368,8 +379,8 @@ const GestionCasting = () => {
             <button 
               className={`tab-btn ${activeTab === 'seleccionados' ? 'tab-active' : ''}`}
               onClick={() => setActiveTab('seleccionados')}
-            >
-              Seleccionados ({contracts.length})
+>
+              Seleccionados ({seleccionadosCliente.length})
             </button>
             <button 
               className={`tab-btn ${activeTab === 'contratos' ? 'tab-active' : ''}`}
@@ -629,16 +640,16 @@ const GestionCasting = () => {
             {activeTab === 'seleccionados' && (
               <div className="shortlists-section">
                 <h2 className="section-title">Seleccionados por cliente</h2>
-                {contracts.length === 0 ? (
-                  <div className="empty-state"><p className="empty-title">Aún no hay seleccionados</p></div>
+                {seleccionadosCliente.length === 0 ? (
+                  <div className="empty-state"><p className="empty-title">Aún no hay selección final del cliente</p></div>
                 ) : (
                   <div className="shortlists-list">
-                    {contracts.map((c) => (
-                      <div key={`sel-${c.id}`} className="shortlist-card">
+                    {seleccionadosCliente.map((c, idx) => (
+                      <div key={`sel-${idx}`} className="shortlist-card">
                         <div className="shortlist-info">
                           <h3>{c.talento_nombre}</h3>
                           <p><strong>Rol:</strong> {c.rol_nombre}</p>
-                          <p><strong>Estado:</strong> {c.status}</p>
+                          <p><strong>Estado cliente:</strong> {c.estado_cliente}</p>
                         </div>
                       </div>
                     ))}
@@ -714,13 +725,19 @@ const GestionCasting = () => {
                         </div>
                         <div className="shortlist-url">
                           <code>/ver-shortlist/{sl.url_publica}</code>
+                          <div><small>Clave cliente: <strong>{sl.cliente_access_password || '-'}</strong></small></div>
                         </div>
-                        <button 
-                          onClick={() => copyShortlistUrl(sl.url_publica)}
-                          className="btn-copy"
-                        >
-                          Copiar URL
-                        </button>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button 
+                            onClick={() => copyShortlistUrl(sl.url_publica, sl.cliente_access_password)}
+                            className="btn-copy"
+                          >
+                            Copiar URL
+                          </button>
+                          {sl.cliente_finalizado && (
+                            <button className="btn-secondary-small" onClick={() => setActiveTab('seleccionados')}>Ver selección</button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

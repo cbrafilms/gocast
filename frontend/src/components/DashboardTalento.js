@@ -18,6 +18,7 @@ const DashboardTalento = ({ user }) => {
   const [contratoDetalle, setContratoDetalle] = useState(null);
   const [showInvitaciones, setShowInvitaciones] = useState(true);
   const [showRecomendados, setShowRecomendados] = useState(true);
+  const [showAplicaciones, setShowAplicaciones] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -261,27 +262,29 @@ const DashboardTalento = ({ user }) => {
         </div>
 
         {/* Mis Aplicaciones */}
-        {aplicaciones.length > 0 && (
-          <div className="dashboard-section">
-            <h2 className="section-title">Mis Aplicaciones Recientes</h2>
-            <div className="aplicaciones-list">
-              {aplicaciones.slice(0, 5).map((app) => (
-                <div key={app.id} className="aplicacion-item" data-testid="aplicacion-item">
-                  <div className="aplicacion-info">
-                    <span className="aplicacion-casting">{app.casting_id}</span>
-                    <span className={`aplicacion-estado estado-${app.estado}`}>
-                      {app.estado === 'pendiente' ? '⏳ Pendiente' : 
-                       app.estado === 'aceptada' ? '✅ Aceptada' : '❌ Rechazada'}
-                    </span>
-                  </div>
-                  <span className="aplicacion-fecha">
-                    {new Date(app.fecha_aplicacion).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Mis aplicaciones</h2>
+            <button className="collapse-toggle-btn" onClick={() => setShowAplicaciones(v => !v)}>{showAplicaciones ? 'Ocultar' : 'Mostrar'}</button>
           </div>
-        )}
+          {showAplicaciones && (
+            aplicaciones.length > 0 ? (
+              <div className="aplicaciones-list">
+                {aplicaciones.slice(0, 10).map((app) => (
+                  <div key={app.id} className="aplicacion-item" data-testid="aplicacion-item">
+                    <div className="aplicacion-info">
+                      <span className="aplicacion-casting">{app.casting_id}</span>
+                      <span className={`aplicacion-estado estado-${app.estado}`}>
+                        {app.estado === 'pendiente' ? '⏳ Pendiente' : app.estado === 'aceptada' ? '✅ Aceptada' : '❌ Rechazada'}
+                      </span>
+                    </div>
+                    <span className="aplicacion-fecha">{new Date(app.fecha_aplicacion).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <div className="empty-state"><p className="empty-title">Sin aplicaciones aún</p></div>
+          )}
+        </div>
 
         {contratos.length > 0 && (
           <div className="dashboard-section">

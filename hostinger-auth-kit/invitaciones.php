@@ -67,12 +67,13 @@ try {
 
   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (($u['tipo_usuario'] ?? '') === 'talento') {
-      $q = $pdo->prepare('SELECT id, casting_id, productora_nombre, rol_nombre, mensaje, estado, fecha_invitacion FROM invitaciones WHERE talento_id = ? ORDER BY id DESC');
+      $q = $pdo->prepare('SELECT i.id, i.casting_id, i.productora_nombre, i.rol_nombre, i.mensaje, i.estado, i.fecha_invitacion, c.titulo as casting_titulo FROM invitaciones i LEFT JOIN castings c ON c.id = i.casting_id WHERE i.talento_id = ? ORDER BY i.id DESC');
       $q->execute([(int)$u['id']]);
       $rows = $q->fetchAll() ?: [];
       $out = array_map(fn($r) => [
         'id' => (string)$r['id'],
         'casting_id' => (string)$r['casting_id'],
+        'casting_titulo' => $r['casting_titulo'] ?? ('Casting #' . $r['casting_id']),
         'productora_nombre' => $r['productora_nombre'],
         'rol_nombre' => $r['rol_nombre'],
         'mensaje' => $r['mensaje'],

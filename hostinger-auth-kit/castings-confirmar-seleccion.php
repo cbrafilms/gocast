@@ -48,7 +48,12 @@ try {
   if (!is_array($sel)) $sel = [];
   $created = 0;
   foreach ($sel as $rol => $v) {
-    $tid = (int)($v['principal_talento_id'] ?? 0);
+    $states = $v['states'] ?? [];
+    if (!is_array($states)) $states = [];
+    $tid = 0;
+    foreach ($states as $candidateId => $state) {
+      if ($state === 'principal') { $tid = (int)$candidateId; break; }
+    }
     if ($tid <= 0) continue;
     $uq = $pdo->prepare('SELECT nombre FROM users WHERE id = ? LIMIT 1');
     $uq->execute([$tid]);
