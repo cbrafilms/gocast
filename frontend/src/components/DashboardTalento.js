@@ -184,7 +184,7 @@ const DashboardTalento = ({ user }) => {
         <div className="dashboard-section invitaciones-section">
           <div className="section-header">
             <h2 className="section-title">📧 Invitaciones recibidas</h2>
-            <button className="btn-secondary-small" onClick={() => setShowInvitaciones(v => !v)}>
+            <button className="collapse-toggle-btn" onClick={() => setShowInvitaciones(v => !v)}>
               {showInvitaciones ? 'Ocultar' : 'Mostrar'}
             </button>
           </div>
@@ -218,7 +218,7 @@ const DashboardTalento = ({ user }) => {
         <div className="dashboard-section">
           <div className="section-header">
             <h2 className="section-title">Castings recomendados para ti <span style={{ fontSize: '0.8em', fontWeight: 500, opacity: 0.85 }}>· Función premium (gratis por 30 días)</span></h2>
-            <button className="btn-secondary-small" onClick={() => setShowRecomendados(v => !v)}>
+            <button className="collapse-toggle-btn" onClick={() => setShowRecomendados(v => !v)}>
               {showRecomendados ? 'Ocultar' : 'Mostrar'}
             </button>
           </div>
