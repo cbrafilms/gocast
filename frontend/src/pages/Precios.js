@@ -6,221 +6,140 @@ const Precios = () => {
     <div className="gocast-page">
       <div className="gocast-container">
         <div className="content-page">
-          <h1 className="page-title" data-testid="pricing-title">Precios y Planes</h1>
-          <p className="page-subtitle">Elige el plan que mejor se adapte a tus necesidades</p>
-          
-          {/* Sección Talentos */}
+          <h1 className="page-title" data-testid="pricing-title">Planes GOCAST.me</h1>
+          <p className="page-subtitle">
+            Precios simples para escalar talento y producción en Latinoamérica.
+          </p>
+
           <section className="pricing-section">
-            <h2 className="pricing-section-title">Para Talentos</h2>
-            <div className="pricing-grid-single">
-              <div className="pricing-card pricing-card-talent" data-testid="talent-plan">
+            <h2 className="pricing-section-title">Talentos</h2>
+            <div className="pricing-grid">
+              <div className="pricing-card pricing-card-featured" data-testid="talent-free-plan">
+                <div className="pricing-badge pricing-badge-popular">Free para siempre</div>
                 <div className="pricing-header">
-                  <h3 className="pricing-name">Plan Talento</h3>
+                  <h3 className="pricing-name">Free</h3>
+                  <div className="pricing-price">
+                    <span className="price-amount">$0</span>
+                    <span className="price-period">/siempre</span>
+                  </div>
+                  <p className="pricing-description">Ideal para empezar y postular rápido.</p>
+                </div>
+                <ul className="pricing-features">
+                  <li className="feature-item"><Check className="feature-icon" /><span>1 foto (subida directa)</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>1 video por URL (YouTube, Vimeo o Drive público)</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Postulación a castings</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Perfil público básico</span></li>
+                </ul>
+                <a className="pricing-helper-link" href="/faq#video-url">¿Cómo subir mi video por URL?</a>
+                <button className="pricing-button" data-testid="talent-free-btn">Empezar Gratis</button>
+              </div>
+
+              <div className="pricing-card" data-testid="talent-pro-plan">
+                <div className="pricing-header">
+                  <h3 className="pricing-name">Talento Pro</h3>
                   <div className="pricing-price">
                     <span className="price-amount">$12</span>
-                    <span className="price-period">/año</span>
+                    <span className="price-period">/año (primer año)</span>
                   </div>
-                  <p className="pricing-description">Primer año completamente gratis</p>
+                  <p className="pricing-description">Luego USD 24/año en renovación.</p>
                 </div>
                 <ul className="pricing-features">
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Perfil profesional completo</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Subida ilimitada de fotos y videos</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Recibe invitaciones a castings</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Panel de gestión personal</span>
-                  </li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Todo lo de Free</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Hasta 10 fotos y 3 videos</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Mejor visibilidad en búsquedas</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Estadísticas de perfil y postulaciones</span></li>
                 </ul>
-                <button className="pricing-button" data-testid="talent-plan-btn">Comenzar Gratis</button>
+                <button className="pricing-button" data-testid="talent-pro-btn">Mejorar a Pro</button>
+              </div>
+
+              <div className="pricing-card" data-testid="talent-featured-plan">
+                <div className="pricing-header">
+                  <h3 className="pricing-name">Talento Destacado</h3>
+                  <div className="pricing-price">
+                    <span className="price-amount">$1.5</span>
+                    <span className="price-period">/mes (año 1)</span>
+                  </div>
+                  <p className="pricing-description">Add-on para perfiles Pro. Luego USD 3/mes.</p>
+                </div>
+                <ul className="pricing-features">
+                  <li className="feature-item"><Check className="feature-icon" /><span>Aparición como “Talento recomendado”</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Prioridad en vitrinas y listados clave</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Mayor exposición frente a productoras</span></li>
+                </ul>
+                <button className="pricing-button" data-testid="talent-featured-btn">Quiero destacar</button>
               </div>
             </div>
           </section>
 
-          {/* Sección Productoras */}
           <section className="pricing-section">
-            <h2 className="pricing-section-title">Para Productoras y Agencias</h2>
-            
+            <h2 className="pricing-section-title">Productoras</h2>
             <div className="pricing-grid">
-              {/* Pago por Casting */}
-              <div className="pricing-card" data-testid="pay-per-casting-plan">
-                <div className="pricing-badge">Ideal para empezar</div>
+              <div className="pricing-card" data-testid="producer-starter-plan">
                 <div className="pricing-header">
-                  <h3 className="pricing-name">Pago por Casting</h3>
+                  <h3 className="pricing-name">Starter</h3>
                   <div className="pricing-price">
-                    <span className="price-amount">$10</span>
-                    <span className="price-period">/casting</span>
-                  </div>
-                  <p className="pricing-description">Navega gratis, paga solo al enviar invitaciones</p>
-                </div>
-                <ul className="pricing-features">
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Crear perfil: Gratis</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Navegar talentos: Gratis</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Activar casting: $10</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Sin compromisos mensuales</span>
-                  </li>
-                </ul>
-                <button className="pricing-button" data-testid="pay-per-casting-btn">Empezar Ahora</button>
-              </div>
-
-              {/* Suscripción Mensual Básica */}
-              <div className="pricing-card" data-testid="monthly-basic-plan">
-                <div className="pricing-header">
-                  <h3 className="pricing-name">Mensual Básico</h3>
-                  <div className="pricing-price">
-                    <span className="price-amount">$10</span>
-                    <span className="price-period">/mes</span>
-                  </div>
-                  <p className="pricing-description">Hasta 5 castings por mes</p>
-                </div>
-                <ul className="pricing-features">
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>5 castings incluidos</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Filtros avanzados</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Castings adicionales: $5 c/u</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Soporte prioritario</span>
-                  </li>
-                </ul>
-                <button className="pricing-button" data-testid="monthly-basic-btn">Suscribirse</button>
-              </div>
-
-              {/* Suscripción Mensual Premium */}
-              <div className="pricing-card pricing-card-featured" data-testid="monthly-premium-plan">
-                <div className="pricing-badge pricing-badge-popular">Más Popular</div>
-                <div className="pricing-header">
-                  <h3 className="pricing-name">Mensual Premium</h3>
-                  <div className="pricing-price">
-                    <span className="price-amount">$20</span>
-                    <span className="price-period">/mes</span>
-                  </div>
-                  <p className="pricing-description">Castings ilimitados</p>
-                </div>
-                <ul className="pricing-features">
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Castings ilimitados</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Filtros avanzados</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Destaca castings: $5 c/u</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Soporte prioritario 24/7</span>
-                  </li>
-                </ul>
-                <button className="pricing-button pricing-button-featured" data-testid="monthly-premium-btn">Suscribirse</button>
-              </div>
-
-              {/* Plan Anual */}
-              <div className="pricing-card" data-testid="annual-plan">
-                <div className="pricing-badge pricing-badge-save">Ahorra 50%</div>
-                <div className="pricing-header">
-                  <h3 className="pricing-name">Plan Anual</h3>
-                  <div className="pricing-price">
-                    <span className="price-amount">$50</span>
+                    <span className="price-amount">$49</span>
                     <span className="price-period">/año</span>
                   </div>
-                  <p className="pricing-description">Hasta 60 castings al año</p>
+                  <p className="pricing-description">Para equipos que están empezando.</p>
                 </div>
                 <ul className="pricing-features">
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>60 castings incluidos</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Ahorro de $70 al año</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Castings adicionales: $5 c/u</span>
-                  </li>
-                  <li className="feature-item">
-                    <Check className="feature-icon" />
-                    <span>Facturación anual</span>
-                  </li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Hasta 2 castings por mes (no acumulables)</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Gestión de postulaciones</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>1 usuario de equipo</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Dashboard básico</span></li>
                 </ul>
-                <button className="pricing-button" data-testid="annual-btn">Suscribirse</button>
+                <button className="pricing-button" data-testid="producer-starter-btn">Comenzar Starter</button>
+              </div>
+
+              <div className="pricing-card pricing-card-featured" data-testid="producer-pro-plan">
+                <div className="pricing-badge pricing-badge-popular">Recomendado</div>
+                <div className="pricing-header">
+                  <h3 className="pricing-name">Pro</h3>
+                  <div className="pricing-price">
+                    <span className="price-amount">$149</span>
+                    <span className="price-period">/año</span>
+                  </div>
+                  <p className="pricing-description">Para operación constante de casting.</p>
+                </div>
+                <ul className="pricing-features">
+                  <li className="feature-item"><Check className="feature-icon" /><span>Hasta 10 castings por mes (no acumulables)</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Filtros y gestión avanzada</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Hasta 3 usuarios de equipo</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Soporte prioritario</span></li>
+                </ul>
+                <button className="pricing-button pricing-button-featured" data-testid="producer-pro-btn">Escalar a Pro</button>
               </div>
             </div>
           </section>
 
-          {/* Sección Extras */}
-          <section className="pricing-extras">
-            <h2 className="pricing-section-title">Extras Disponibles</h2>
-            <div className="extras-grid">
-              <div className="extra-card">
-                <h3 className="extra-title">Casting Destacado</h3>
-                <p className="extra-description">Aparece en la parte superior durante 7 días</p>
-                <div className="extra-price">$5</div>
-              </div>
-              <div className="extra-card">
-                <h3 className="extra-title">Castings Adicionales</h3>
-                <p className="extra-description">Para planes mensuales o anuales</p>
-                <div className="extra-price">$5 c/u</div>
+          <section className="pricing-section">
+            <h2 className="pricing-section-title">Agencias</h2>
+            <div className="pricing-grid-single">
+              <div className="pricing-card pricing-card-agency" data-testid="agency-coming-soon-plan">
+                <div className="pricing-badge pricing-badge-soon">PRONTO</div>
+                <div className="pricing-header">
+                  <h3 className="pricing-name">Plan Agencia</h3>
+                  <div className="pricing-price">
+                    <span className="price-amount">Desde $399</span>
+                    <span className="price-period">/año</span>
+                  </div>
+                  <p className="pricing-description">Diseñado para operación multi-cliente y alto volumen.</p>
+                </div>
+                <ul className="pricing-features">
+                  <li className="feature-item"><Check className="feature-icon" /><span>Gestión multi-cliente</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Mayor volumen mensual de castings</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Flujos para equipos y cuentas avanzadas</span></li>
+                  <li className="feature-item"><Check className="feature-icon" /><span>Soporte dedicado</span></li>
+                </ul>
+                <button className="pricing-button" data-testid="agency-waitlist-btn">Unirme a lista de espera</button>
               </div>
             </div>
           </section>
 
-          {/* Por qué funciona */}
-          <section className="pricing-why">
-            <h2 className="pricing-section-title">¿Por qué este modelo funciona?</h2>
-            <div className="why-grid">
-              <div className="why-item">
-                <span className="why-icon">💰</span>
-                <p>Económico para productoras pequeñas e independientes</p>
-              </div>
-              <div className="why-item">
-                <span className="why-icon">🚀</span>
-                <p>Escalable para agencias y productoras grandes</p>
-              </div>
-              <div className="why-item">
-                <span className="why-icon">🎯</span>
-                <p>Atrae talentos rápidamente con primer año gratis</p>
-              </div>
-              <div className="why-item">
-                <span className="why-icon">🔄</span>
-                <p>Ingresos recurrentes y compras impulsivas</p>
-              </div>
-              <div className="why-item">
-                <span className="why-icon">🌎</span>
-                <p>Competitivo frente a plataformas internacionales</p>
-              </div>
-            </div>
+          <section className="pricing-notes" data-testid="pricing-notes">
+            <p>Valores en USD. Planes anuales facturados por adelantado.</p>
+            <p>Límites mensuales no acumulables. Se aplican Términos y Política de Plataforma.</p>
           </section>
         </div>
       </div>

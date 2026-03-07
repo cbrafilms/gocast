@@ -596,6 +596,10 @@ body {
   background: var(--success-color);
 }
 
+.pricing-badge-soon {
+  background: #f97316;
+}
+
 .pricing-header {
   margin-bottom: 1.5rem;
   text-align: center;
@@ -675,6 +679,35 @@ body {
 
 .pricing-button-featured {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.pricing-card-agency {
+  max-width: 520px;
+  width: 100%;
+}
+
+.pricing-helper-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pricing-helper-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.pricing-notes {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.pricing-notes p {
+  margin: 0.35rem 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
 }
 
 /* Extras */
